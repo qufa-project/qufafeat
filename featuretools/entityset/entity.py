@@ -16,6 +16,8 @@ from featuretools.utils.entity_utils import (
 from featuretools.utils.gen_utils import import_or_none, is_instance
 from featuretools.utils.wrangle import _check_time_type, _dataframes_equal
 from featuretools.variable_types import Text, find_variable_types
+from featuretools.entityset.lossfit import lossfit
+
 
 ks = import_or_none('databricks.koalas')
 
@@ -440,6 +442,23 @@ class Entity(object):
 
         self.secondary_time_index = secondary_time_index
 
+    def get_missing_rate(self):
+        """
+        Get the missing rate of entity values
+
+         Returns:
+             float: missing rate
+        """
+        return self.df.isnull().any(axis=1).sum() / len(self.df)
+
+    def impute_missing_values(self):
+        """
+        Fill missing values with estimated values using linear regression
+
+        Returns:
+            None
+        """
+        lossfit(self)
 
 def _create_index(index, make_index, df):
     '''Handles index creation logic base on user input'''
