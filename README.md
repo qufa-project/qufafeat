@@ -1,3 +1,9 @@
+# QufaFeat
+
+- This tool aims to improve data quality using feature engineering based on featuretools
+- This is a development work done on behalf of QUFA(https://gitlab.com/qufa) project 
+
+
 <p align="center">
 <img width=50% src="https://www.featuretools.com/wp-content/uploads/2017/12/FeatureLabs-Logo-Tangerine-800.png" alt="Featuretools" />
 </p>
