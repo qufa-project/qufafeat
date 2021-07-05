@@ -73,3 +73,28 @@ class Correlation(AggregationPrimitive):
             return pd.Series.corr(values1, values2, method=self.method)
 
         return corr
+
+
+class Variance(AggregationPrimitive):
+    """Calculates the variance of a list of numbers.
+
+    Description:
+        Given a list of numbers, return the variance, using numpy's built-in variance function.
+        Nan values in a series will be ignored.
+        Return nan when the series is empty or entirely null.
+
+    Examples:
+        >>> variance = Variance()
+        >>> variance([0, 3, 4, 3])
+        2.25
+    """
+    name = "variance"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the variance of {}"
+
+    def get_function(self):
+        def var(values):
+            return np.var(values)
+
+        return var
