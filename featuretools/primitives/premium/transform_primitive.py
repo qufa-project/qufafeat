@@ -192,3 +192,59 @@ class AgeUnder65(AgeUnderN):
 
     def get_function(self):
         return AgeUnderN.get_function_helper(self, 65)
+
+
+class UpperCaseCount(TransformPrimitive):
+    """Calculates the number of upper case letters in text.
+
+    Description:
+        Given a list of strings, determine the number of characters in each string that are capitalized.
+        Counts every letter individually, not just every word that contains capitalized letters.
+
+    Examples:
+        >>> x = ['This IS a string.', 'This is a string', 'aaa']
+        >>> upper_case_count = UpperCaseCount()
+        >>> upper_case_count(x).tolist()
+        [3.0, 1.0, 0.0]
+    """
+    name = "upper_case_count"
+    input_types = [NaturalLanguage]
+    return_types = Numeric
+    description_template = "the number of upper case letters in {}"
+
+    def get_function(self):
+        def upper_cnt(values):
+            return values.str.count(pat='[A-Z]')
+
+        return upper_cnt
+
+
+class UpperCaseWordCount(TransformPrimitive):
+    """Determines the number of words in a string that are entirely capitalized.
+
+    Description:
+        Given list of strings, determine the number of words in each string that are entirely capitalized.
+
+    Examples:
+        >>> x = ['This IS a string.', 'This is a string', 'AAA']
+        >>> upper_case_word_count = UpperCaseWordCount()
+        >>> upper_case_word_count(x).tolist()
+        [1.0, 0.0, 1.0]
+    """
+    name = "upper_case_word_count"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+    description_template = "the number of words that are entirely capitalized in {}"
+
+    def get_function(self):
+        def upper_word_cnt(values):
+            result = []
+            for words in values.str.split():
+                cnt = 0
+                for word in words:
+                    if word.isupper():
+                        cnt += 1
+                result.append(cnt)
+            return np.array(result)
+
+        return upper_word_cnt
