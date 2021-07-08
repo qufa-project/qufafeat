@@ -194,6 +194,39 @@ class AgeUnder65(AgeUnderN):
         return AgeUnderN.get_function_helper(self, 65)
 
 
+class TitleWordCount(TransformPrimitive):
+    """Determines the number of title words in a string.
+
+    Description:
+        Given list of strings, determine the number of title words in each string.
+        A title word is defined as any word starting with a capital letter.
+        Words at the start of a sentence will be counted.
+
+    Examples:
+        >>> x = ['My favorite movie is Jaws.', 'this is a string', 'AAA']
+        >>> title_word_count = TitleWordCount()
+        >>> title_word_count(x).tolist()
+        [2.0, 0.0, 1.0]
+    """
+    name = "title_word_count"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+    description_template = "the number of title words in {}"
+
+    def get_function(self):
+        def title_word_cnt(values):
+            result = []
+            for words in values.str.split():
+                cnt = 0
+                for word in words:
+                    if word[0].isupper():
+                        cnt += 1
+                result.append(cnt)
+            return np.array(result)
+
+        return title_word_cnt
+
+
 class UpperCaseCount(TransformPrimitive):
     """Calculates the number of upper case letters in text.
 
