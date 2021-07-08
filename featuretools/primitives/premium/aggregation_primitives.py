@@ -75,6 +75,143 @@ class Correlation(AggregationPrimitive):
         return corr
 
 
+class TimeSinceLastFalse(AggregationPrimitive):
+    """Calculates the time since the last `False` value.
+
+    description:
+        Using a series of Datetimes and a series of Booleans, find the last record with a `False` value.
+        Return the seconds elapsed between that record and the instance's cutoff time.
+        Return nan if no values are `False`.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> time_since_last_false = TimeSinceLastFalse()
+        >>> cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+        >>> times = [datetime(2010, 1, 1, 11, 45, 0),
+        ...          datetime(2010, 1, 1, 11, 55, 15),
+        ...          datetime(2010, 1, 1, 11, 57, 30)]
+        >>> booleans = [True, False, True]
+        >>> time_since_last_false(times, booleans, time=cutoff_time)
+        285.0
+    """
+    name = "time_since_last_false"
+    input_types = [DatetimeTimeIndex, Boolean]
+    return_type = Numeric
+    description_template = "the time since the last `False` value in {}"
+
+    def get_function(self):
+        def time_since_last_false(values, boolean, time=None):
+            index = -1
+            for i in range(len(boolean)-1, -1, -1):
+                if not boolean[i]:
+                    index = i
+                    break
+            if index == -1:
+                return np.nan
+            time_since = time - values.iloc[index]
+            return time_since.total_seconds()
+
+        return time_since_last_false
+
+
+class TimeSinceLastMax(AggregationPrimitive):
+    """Calculates the time since the maximum value occurred.
+
+    Description:
+        Given a list of numbers, and a corresponding index of datetimes, find the time of the maximum value, and return the time elapsed since it occured.
+        This calculation is done using an instance id's cutoff time.
+
+    Examples:
+        >>> time_since_last_max = TimeSinceLastMax()
+        >>> cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+        >>> times = [datetime(2010, 1, 1, 11, 45, 0),
+        ...          datetime(2010, 1, 1, 11, 55, 15),
+        ...          datetime(2010, 1, 1, 11, 57, 30)]
+        >>> time_since_last_max(times, [1, 3, 2], time=cutoff_time)
+        285.0
+    """
+    name = "time_since_last_max"
+    input_types = [DatetimeTimeIndex, Numeric]
+    return_type = Numeric
+    description_template = "the time since the maximum value occurred in {}"
+
+    def get_function(self):
+        def time_since_last_max(values, arr, time=None):
+            maxIndex = np.argmax(arr)
+            time_since = time - values.iloc[maxIndex]
+            return time_since.total_seconds()
+
+        return time_since_last_max
+
+
+class TimeSinceLastMin(AggregationPrimitive):
+    """Calculates the time since the minimum value occurred.
+
+    Description:
+        Given a list of numbers, and a corresponding index of datetimes, find the time of the minimum value, and return the time elapsed since it occured.
+        This calculation is done using an instance id's cutoff time.
+
+    Examples:
+        >>> time_since_last_min = TimeSinceLastMin()
+        >>> cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+        >>> times = [datetime(2010, 1, 1, 11, 45, 0),
+        ...          datetime(2010, 1, 1, 11, 55, 15),
+        ...          datetime(2010, 1, 1, 11, 57, 30)]
+        >>> time_since_last_min(times, [1, 3, 2], time=cutoff_time)
+        900.0
+    """
+    name = "time_since_last_min"
+    input_types = [DatetimeTimeIndex, Numeric]
+    return_type = Numeric
+    description_template = "the time since the minimum value occurred in {}"
+
+    def get_function(self):
+        def time_since_last_min(values, arr, time=None):
+            minIndex = np.argmin(arr)
+            time_since = time - values.iloc[minIndex]
+            return time_since.total_seconds()
+
+        return time_since_last_min
+
+
+class TimeSinceLastTrue(AggregationPrimitive):
+    """Calculates the time since the last `True` value.
+
+    description:
+        Using a series of Datetimes and a series of Booleans, find the last record with a `True` value.
+        Return the seconds elapsed between that record and the instance's cutoff time.
+        Return nan if no values are `True`.
+
+    Examples:
+        >>> time_since_last_true = TimeSinceLastTrue()
+        >>> cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+        >>> times = [datetime(2010, 1, 1, 11, 45, 0),
+        ...          datetime(2010, 1, 1, 11, 55, 15),
+        ...          datetime(2010, 1, 1, 11, 57, 30)]
+        >>> booleans = [True, True, False]
+        >>> time_since_last_true(times, booleans, time=cutoff_time)
+        285.0
+    """
+    name = "time_since_last_true"
+    input_types = [DatetimeTimeIndex, Boolean]
+    return_type = Numeric
+    description_template = "the time since the last `True` value in {}"
+
+    def get_function(self):
+        def time_since_last_true(values, boolean, time=None):
+            index = -1
+            for i in range(len(boolean)-1, -1, -1):
+                if boolean[i]:
+                    index = i
+                    break
+            if index == -1:
+                return np.nan
+            time_since = time - values.iloc[index]
+            return time_since.total_seconds()
+
+        return time_since_last_true
+
+
 class Variance(AggregationPrimitive):
     """Calculates the variance of a list of numbers.
 
