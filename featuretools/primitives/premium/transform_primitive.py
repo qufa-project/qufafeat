@@ -2,6 +2,11 @@ import warnings
 
 import numpy as np
 
+import string
+
+from scipy.signal import savgol_filter
+from phone_iso3166.country import phone_country
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from featuretools.primitives.base.transform_primitive_base import (
     TransformPrimitive
 )
@@ -10,6 +15,7 @@ from featuretools.utils.entity_utils import replace_latlong_nan
 from featuretools.utils.gen_utils import Library
 from featuretools.variable_types import (
     Boolean,
+    Categorical,
     DateOfBirth,
     Datetime,
     DatetimeTimeIndex,
@@ -17,6 +23,7 @@ from featuretools.variable_types import (
     NaturalLanguage,
     Numeric,
     Ordinal,
+    PhoneNumber,
     Variable
 )
 
@@ -192,6 +199,293 @@ class AgeUnder65(AgeUnderN):
 
     def get_function(self):
         return AgeUnderN.get_function_helper(self, 65)
+
+
+class PhoneNumberToCountry(TransformPrimitive):
+    """Determines the country of a phone number.
+
+    Description:
+        Given a list of phone numbers, return the country of each one, based on the country code.
+        If a phone number is missing or invalid, return np.nan.
+
+    Examples:
+        >>> phone_number_to_country = PhoneNumberToCountry()
+        >>> phone_number_to_country(['+55 85 5555555', '+81 55-555-5555', '+1-541-754-3010',]).tolist()
+        ['BR', 'JP', 'US']
+    """
+    name = "phone_number_to_country"
+    input_types = [PhoneNumber]
+    return_type = Categorical
+    description_template = "the country of {}"
+
+    def get_function(self):
+        def phone_to_country(values):
+            result = []
+            for value in values:
+                result.append(phone_country(value))
+            return np.array(result)
+
+        return phone_to_country
+
+
+class PolarityScore(TransformPrimitive):
+    """Calculates the polarity of a text on a scale from -1 (negative) to 1 (positive)
+
+    Description:
+        Given a list of strings assign a polarity score from -1 (negative text), to 0 (neutral text), to 1 (positive text).
+        The function returns a score for every given piece of text.
+        If a string is missing, return 'NaN'
+
+    Examples:
+        >>> x = ['He loves dogs', 'She hates cats', 'There is a dog', '']
+        >>> polarity_score = PolarityScore()
+        >>> polarity_score(x).tolist()
+        [0.677, -0.649, 0.0, 0.0]
+    """
+    name = "polarity_score"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+    description_template = "the polarity of {} on a scale from -1 to 1"
+
+    def get_function(self):
+        def polarity_score(values):
+            result = []
+            analyazer = SentimentIntensityAnalyzer()
+            for value in values:
+                result.append(analyazer.polarity_scores(value)['compound'])
+            return np.array(result)
+
+        return polarity_score
+
+
+class PunctuationCount(TransformPrimitive):
+    """Determines number of punctuation characters in a string.
+
+    Description:
+        Given list of strings, determine the number of punctuation characters in each string.
+        Looks for any of the following: !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+
+    Examples:
+        >>> x = ['This is a test file.', 'This is second line', 'third line: $1,000']
+        >>> punctuation_count = PunctuationCount()
+        >>> punctuation_count(x).tolist()
+        [1.0, 0.0, 3.0]
+    """
+    name = "punctuation_count"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+    description_template = "the number of punctuation characters in {}"
+
+    def get_function(self):
+        def punc_cnt(values):
+            result = []
+            for value in values:
+                cnt = 0
+                for punc in list(string.punctuation):
+                    if punc in value:
+                        cnt += 1
+                result.append(cnt)
+            return np.array(result)
+
+        return punc_cnt
+
+
+class Quarter(TransformPrimitive):
+    """Determines the quarter of the year of a datetime
+
+    Examples:
+        >>> import pandas as pd
+        >>> quarter = Quarter()
+        >>> quarter([pd.to_datetime('2018-02-28'),
+        ...          pd.to_datetime('2018-08-15'),
+        ...          pd.to_datetime('2018-12-31'),
+        ...          pd.to_datetime('2018-05-01')]).tolist()
+        [1, 3, 4, 2]
+    """
+    name = "quarter"
+    input_types = [Datetime]
+    return_type = Ordinal
+    description_template = "the quarter of the year of {}"
+
+    def get_function(self):
+        def quarter(values):
+            result = []
+            for value in values:
+                month = value.month
+                if 1 <= month <= 3:
+                    result.append(1)
+                elif 4 <= month <= 6:
+                    result.append(2)
+                elif 7 <= month <= 9:
+                    result.append(3)
+                else:
+                    result.append(4)
+            return np.array(result)
+
+        return quarter
+
+
+class SavgolFilter(TransformPrimitive):
+    """Applies a Savitzky-Golay filter to a list of values.
+
+    Description:
+        Given a list of values, return a smoothed list which increases the signal to noise ratio without greatly distoring the signal.
+        Uses the `Savitzky–Golay filter` method.
+        If the input list has less than 20 values, it will be returned as is.
+
+    Args:
+        window_length (int) : The length of the filter window (i.e. the numberof coefficients).
+            `window_length` must be a positive odd integer.
+        polyorder (int) : The order of the polynomial used to fit the samples.
+            `polyorder` must be less than `window_length`.
+        deriv (int) : Optional. The order of the derivative to compute.
+            This must be a nonnegative integer.
+            The default is 0, which means to filter the data without differentiating.
+        delta (float) : Optional. The spacing of the samples to which the filter will be applied.
+            This is only used if deriv > 0. Default is 1.0.
+        mode (str) : Optional. Must be 'mirror', 'constant', 'nearest', 'wrap' or 'interp'.
+            This determines the type of extension to use for the padded signal to which the filter is applied.
+            When `mode` is 'constant', the padding value is given by `cval`.
+            See the Notes for more details on 'mirror', 'constant', 'wrap', and 'nearest'.
+            When the 'interp' mode is selected (the default), no extensionis used.
+            Instead, a degree `polyorder` polynomial is fit to the last `window_length` values of the edges, and this polynomial is used to evaluate the last `window_length // 2` output values.
+        cval (scalar) : Optional. Value to fill past the edges of the input if `mode` is 'constant'.
+            Default is 0.0.
+
+    Examples:
+        >>> savgol_filter = SavgolFilter()
+        >>> data = [0, 1, 1, 2, 3, 4, 5, 7, 8, 7, 9, 9, 12, 11, 12, 14, 15, 17, 17, 17, 20]
+        >>> [round(x, 4) for x in savgol_filter(data).tolist()[:3]]
+        [0.0429, 0.8286, 1.2571]
+
+        We can control `window_length` and `polyorder` of the filter.
+
+        >>> savgol_filter = SavgolFilter(window_length=13, polyorder=3)
+        >>> [round(x, 4) for x in savgol_filter(data).tolist()[:3]]
+        [-0.0962, 0.6484, 1.4451]
+
+        We can control the `deriv` and `delta` parameters.
+
+        >>> savgol_filter = SavgolFilter(deriv=1, delta=1.5)
+        >>> [round(x, 4) for x in savgol_filter(data).tolist()[:3]]
+        [0.754, 0.3492, 0.2778]
+
+        We can use `mode` to control how edge values are handled.
+
+        >>> savgol_filter = SavgolFilter(mode='constant', cval=5)
+        >>> [round(x, 4) for x in savgol_filter(data).tolist()[:3]]
+        [1.5429, 0.2286, 1.2571]
+    """
+    name = "savgol_filter"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "Applying Savitzky-Golay filter to {}"
+
+    def __init__(self, window_length=5, polyorder=3, deriv=0, delta=1.0, axis=-1, mode='interp', cval=0.0):
+        self.window_length = window_length
+        self.polyorder = polyorder
+        self.deriv = deriv
+        self.delta = delta
+        self.axis = axis
+        self.mode = mode
+        self.cval = cval
+
+    def get_function(self):
+        def sav_filter(values):
+            return savgol_filter(values, self.window_length, self.polyorder, self.deriv, self.delta, self.axis, self.mode, self.cval)
+
+        return sav_filter
+
+
+class Season(TransformPrimitive):
+    """Determines the season of a given datetime.
+
+    Description:
+        Given a list of datetimes, return the season of each one (`winter`, `spring`, `summer`, or `fall`).
+        Uses the month of the datetime to determine the season.
+
+    Args:
+        hemisphere (str) : Specify northern or southern hemisphere.
+            Could be 'northern' or 'north' or 'southern' or 'south'.
+            Default is 'northern'.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> times = [datetime(2019, 1, 1),
+        ...          datetime(2019, 3, 15),
+        ...          datetime(2019, 7, 20),
+        ...          datetime(2019, 12, 30)]
+        >>> season = Season()
+        >>> season(times).tolist()
+        ['winter', 'spring', 'summer', 'winter']
+
+        We can specify the hemisphere as well.
+
+        >>> from datetime import datetime
+        >>> season_southern = Season(hemisphere='southern')
+        >>> season_southern(times).tolist()
+        ['summer', 'fall', 'winter', 'summer']
+    """
+    name = "season"
+    input_types = [Datetime]
+    return_type = Categorical
+    description_template = "the season of {}"
+
+    def __init__(self, hemisphere="northern"):
+        self.hemisphere = hemisphere.lower()
+
+    def get_function(self):
+        def season(values):
+            result = []
+            if self.hemisphere == "northern" or self.hemisphere == "north":
+                for value in values:
+                    month = value.month
+                    if 3 <= month <= 5:
+                        result.append("spring")
+                    elif 6 <= month <= 8:
+                        result.append("summer")
+                    elif 9 <= month <= 11:
+                        result.append("fall")
+                    else:
+                        result.append("winter")
+            elif self.hemisphere == "southern" or self.hemisphere == "south":
+                for value in values:
+                    month = value.month
+                    if 3 <= month <= 5:
+                        result.append("fall")
+                    elif 6 <= month <= 8:
+                        result.append("winter")
+                    elif 9 <= month <= 11:
+                        result.append("spring")
+                    else:
+                        result.append("summer")
+            return np.array(result)
+
+        return season
+
+
+class Sign(TransformPrimitive):
+    """Determines the sign of numeric values.
+
+    Description:
+        Given a list of numbers, returns 0, 1, -1 if the number is zero, positive, or negative, respectively.
+        If input value is NaN, returns NaN.
+
+    Examples:
+        >>> sign = Sign()
+        >>> sign([1., -2., 3., -4., 0]).tolist()
+        [1.0, -1.0, 1.0, -1.0, 0.0]
+    """
+    name = "sign"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the sign of {}"
+
+    def get_function(self):
+        def sign(values):
+            return np.sign(values)
+
+        return sign
 
 
 class TitleWordCount(TransformPrimitive):
