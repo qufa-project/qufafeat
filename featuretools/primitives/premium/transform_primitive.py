@@ -3,9 +3,14 @@ import warnings
 import numpy as np
 
 import string
+import pandas
+import re
 
+from pyzipcode import ZipCodeDatabase
+from pandas import Series
 from scipy.signal import savgol_filter
 from phone_iso3166.country import phone_country
+from nltk.corpus import stopwords
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from featuretools.primitives.base.transform_primitive_base import (
     TransformPrimitive
@@ -24,7 +29,10 @@ from featuretools.variable_types import (
     Numeric,
     Ordinal,
     PhoneNumber,
-    Variable
+    SubRegionCode,
+    URL,
+    Variable,
+    ZIPCode
 )
 
 
@@ -281,7 +289,7 @@ class PunctuationCount(TransformPrimitive):
             result = []
             for value in values:
                 cnt = 0
-                for punc in list(string.punctuation):
+                for punc in string.punctuation:
                     if punc in value:
                         cnt += 1
                 result.append(cnt)
@@ -488,6 +496,71 @@ class Sign(TransformPrimitive):
         return sign
 
 
+class StopwordCount(TransformPrimitive):
+    """Determines number of stopwords in a string.
+
+    Description:
+        Given list of strings, determine the number of stopwords characters in each string.
+        Looks for any of the English stopwords defined in `nltk.corpus.stopwords`.
+        Case insensitive.
+
+    Examples:
+        >>> x = ['This is a test string.', 'This is second string', 'third string']
+        >>> stopword_count = StopwordCount()
+        >>> stopword_count(x).tolist()
+        [3.0, 2.0, 0.0]
+    """
+    name = "stopword_count"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+    description_template = "the number of stopwords in {}"
+
+    def get_function(self):
+        def stop_cnt(values):
+            result = []
+            stop_words = stopwords.words('english')
+            for words in values.str.split():
+                cnt = 0
+                for word in words:
+                    if word.lower() in stop_words:
+                        cnt += 1
+                result.append(cnt)
+            return np.array(result)
+
+        return stop_cnt
+
+
+class SubRegionCodeToRegion(TransformPrimitive):
+    """Determines the region of a US sub-region.
+
+    Description:
+        Converts a ISO 3166-2 region code to a higher-level US region.
+        Possible values include the following: `['West', 'South', 'Northeast', 'Midwest']`
+
+    Examples:
+        >>> sub_region_code_to_region = SubRegionCodeToRegion()
+        >>> subregions = ["US-AL", "US-IA", "US-VT", "US-DC", "US-MI", "US-NY"]
+        >>> sub_region_code_to_region(subregions).tolist()
+        ['south', 'midwest', 'northeast', 'south', 'midwest', 'northeast']
+    """
+    name = "sub_region_code_to_region"
+    input_types = [SubRegionCode]
+    return_type = Categorical
+    description_template = "the region of {}"
+
+    def get_function(self):
+        def sub_to_region(values):
+            url = "https://raw.githubusercontent.com/cphalpert/census-regions/master/us%20census%20bureau%20regions%20and%20divisions.csv"
+            data = pandas.read_csv(url)
+            result = []
+            for value in values:
+                selected_data = data[data['State Code'] == value[-2:]]
+                result.append(selected_data['Region'].to_list()[0].lower())
+            return np.array(result)
+
+        return sub_to_region
+
+
 class TitleWordCount(TransformPrimitive):
     """Determines the number of title words in a string.
 
@@ -575,3 +648,68 @@ class UpperCaseWordCount(TransformPrimitive):
             return np.array(result)
 
         return upper_word_cnt
+
+
+class URLToProtocol(TransformPrimitive):
+    """Determines the protocol(http or https) of a url.
+
+    Description:
+        Extract the protocol of a url using regex.
+        It will be either https or http.
+        Returns nan if the url doesn't contain a protocol.
+
+    Examples:
+        >>> url_to_protocol = URLToProtocol()
+        >>> urls = ['https://www.google.com', 'http://www.google.co.in',
+        ...         'www.facebook.com']
+        >>> url_to_protocol(urls).to_list()
+        ['https', 'http', nan]
+    """
+    name = "url_to_protocol"
+    input_types = [URL]
+    return_type = Categorical
+    description_template = "the protocol of {}"
+
+    def get_function(self):
+        def url_to_protocol(values):
+            result = []
+            for value in values:
+                pat = re.findall('https|http', value)
+                if pat:
+                    result.append(pat[0])
+                else:
+                    result.append(np.nan)
+            return Series(result)
+
+        return url_to_protocol
+
+
+class ZIPCodeToState(TransformPrimitive):
+    """Extracts the state from a ZIPCode.
+
+    Description:
+        Given a ZIPCode, return the state it's in.
+        ZIPCodes can be 5-digit or 9-digit.
+        In the case of 9-digit ZIPCodes, only the first 5 digits are used and any digits after the first five are discarded.
+        Return nan if the ZIPCode is not found.
+
+    Examples:
+        >>> zipcode_to_state = ZIPCodeToState()
+        >>> states = zipcode_to_state(['60622', '94120', '02111-1253'])
+        >>> list(map(str, states))
+        ['IL', 'CA', 'MA']
+    """
+    name = "zip_code_to_state"
+    input_types = [ZIPCode]
+    return_type = Categorical
+    description_template = "the state from a ZIPCode {}"
+
+    def get_function(self):
+        def zip_to_state(values):
+            result = []
+            zipDb = ZipCodeDatabase()
+            for value in values:
+                result.append(zipDb[value[:5]].state)
+            return np.array(result)
+
+        return zip_to_state
