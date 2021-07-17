@@ -42,7 +42,7 @@ class AbsoluteDiff(TransformPrimitive):
     Examples:
         >>> absdiff = AbsoluteDiff()
         >>> absdiff([3.0, -5.0, -2.4]).tolist()
-        [3.0, 5.0, 2.4]
+        [nan, 8.0, 2.6]
     """
     name = "absolute_diff"
     input_types = [Numeric]
