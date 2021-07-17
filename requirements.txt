@@ -9,3 +9,6 @@ dask[dataframe]>=2.12.0
 psutil>=5.4.8
 click>=7.0.0
 sklearn
+pyzipcode
+phone_iso3166
+ntlk
