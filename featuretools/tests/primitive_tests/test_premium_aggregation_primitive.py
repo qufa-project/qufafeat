@@ -2,12 +2,18 @@ import featuretools as ft
 
 import pytest
 
+from datetime import datetime
 from featuretools.primitives import (
     Autocorrelation,
     Correlation,
     CountAboveMean,
     CountBelowMean,
-    CountGreaterThan
+    CountGreaterThan,
+    TimeSinceLastFalse,
+    TimeSinceLastMax,
+    TimeSinceLastMin,
+    TimeSinceLastTrue,
+    Variance
 )
 
 def test_AutoCorrelation():
@@ -35,3 +41,39 @@ def test_CountBelowMean():
 def test_CountGreaterThan():
     count_greater_than = CountGreaterThan()
     assert count_greater_than([1, 2, 3, 4, 5])
+
+
+def test_TimeSinceLastFalse():
+    time_since_last_false = TimeSinceLastFalse()
+    cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+    times = [datetime(2010, 1, 1, 11, 45, 0), datetime(2010, 1, 1, 11, 55, 15), datetime(2010, 1, 1, 11, 57, 30)]
+    booleans = [True, False, True]
+    assert time_since_last_false(times, booleans, time=cutoff_time) == 285.0
+
+
+def test_TimeSinceLastMax():
+    time_since_last_max = TimeSinceLastMax()
+    cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+    times = [datetime(2010, 1, 1, 11, 45, 0), datetime(2010, 1, 1, 11, 55, 15), datetime(2010, 1, 1, 11, 57, 30)]
+    assert time_since_last_max(times, [1, 3, 2], time=cutoff_time) == 285.0
+
+
+def test_TimeSinceLastMin():
+    time_since_last_min = TimeSinceLastMin()
+    cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+    times = [datetime(2010, 1, 1, 11, 45, 0), datetime(2010, 1, 1, 11, 55, 15), datetime(2010, 1, 1, 11, 57, 30)]
+    assert time_since_last_min(times, [1, 3, 2], time=cutoff_time) == 900.0
+
+
+def test_TimeSinceLastTrue():
+    time_since_last_true = TimeSinceLastTrue()
+    cutoff_time = datetime(2010, 1, 1, 12, 0, 0)
+    times = [datetime(2010, 1, 1, 11, 45, 0), datetime(2010, 1, 1, 11, 55, 15), datetime(2010, 1, 1, 11, 57, 30)]
+    booleans = [True, True, False]
+    assert time_since_last_true(times, booleans, time=cutoff_time) == 285.0
+
+
+def test_Variance():
+    variance = Variance()
+    assert variance([0, 3, 4, 3, None]) == 2.25
+
