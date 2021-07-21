@@ -235,3 +235,33 @@ class Variance(AggregationPrimitive):
             return np.var(values)
 
         return var
+
+
+class CountAboveMean(AggregationPrimitive):
+    """Calculates the number of values that are above the mean.
+
+    Examples:
+    >>> count_above_mean = CountAboveMean()
+    >>> count_above_mean([1, 2, 3, 4, 5])
+    2
+    """
+    name = "count_above_mean"
+    input_types = [Numeric]
+    return_type = Numeric
+    default_value = 0
+    description_template = "count_above_mean"
+    stack_on_self = False
+
+    def __init__(self, skipna=False):
+        self.skipna = skipna
+
+    def get_function(self):
+        def count_above_mean(array):
+            count = 0
+            mean = sum(array) / len(array)
+            for val in array:
+                if val > mean:
+                    count += val
+            return count
+
+        return count_above_mean
