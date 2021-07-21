@@ -261,7 +261,37 @@ class CountAboveMean(AggregationPrimitive):
             mean = sum(array) / len(array)
             for val in array:
                 if val > mean:
-                    count += val
+                    count += 1
             return count
 
         return count_above_mean
+
+
+class CountBelowMean(AggregationPrimitive):
+    """Determines the number of values that are below the mean.
+
+    Examples:
+    >>> count_below_mean = CountBelowMean()
+    >>> count_below_mean([1, 2, 3, 4, 10])
+    3
+    """
+    name = "count_below_mean"
+    input_types = [Numeric]
+    return_type = Numeric
+    default_value = 0
+    description_template = "count_below_mean"
+    stack_on_self = False
+
+    def __init__(self, skipna=False):
+        self.skipna = skipna
+
+    def get_function(self):
+        def count_below_mean(array):
+            count = 0
+            mean = sum(array) / len(array)
+            for val in array:
+                if val < mean:
+                    count += 1
+            return count
+
+        return count_below_mean

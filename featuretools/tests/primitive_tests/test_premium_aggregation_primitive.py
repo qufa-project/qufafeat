@@ -5,7 +5,8 @@ import pytest
 from featuretools.primitives import (
     # Autocorrelation,
     # Correlation,
-    CountAboveMean
+    CountAboveMean,
+    CountBelowMean
 )
 
 # def test_AutoCorrelation():
@@ -23,3 +24,8 @@ from featuretools.primitives import (
 def test_CountAboveMean():
     count_above_mean = CountAboveMean()
     assert count_above_mean([1, 2, 3, 4, 5])
+
+
+def test_CountBelowMean():
+    count_below_mean = CountBelowMean()
+    assert count_below_mean([1, 2, 3, 4, 10])
