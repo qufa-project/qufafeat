@@ -295,3 +295,32 @@ class CountBelowMean(AggregationPrimitive):
             return count
 
         return count_below_mean
+
+
+class CountGreaterThan(AggregationPrimitive):
+    """Determines the number of values greater than a controllable threshold.
+
+    Examples:
+    >>> count_greater_than = CountGreaterThan(threshold=3)
+    >>> count_greater_than([1, 2, 3, 4, 5])
+    2
+    """
+    name = "count_greater_than"
+    input_types = [Numeric]
+    return_type = Numeric
+    default_value = 0
+    description_template = "count_greater_than"
+    stack_on_self = False
+
+    def __init__(self, threshold=3):
+        self.threshold = threshold
+
+    def get_function(self):
+        def count_greater_than(array):
+            count = 0
+            for val in array:
+                if val > self.threshold:
+                    count += 1
+            return count
+
+        return count_greater_than
