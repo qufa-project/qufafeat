@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import numpy as np
+from numpy.core.numeric import NaN
 import pandas as pd
 from dask import dataframe as dd
 from scipy import stats
@@ -324,3 +325,36 @@ class CountGreaterThan(AggregationPrimitive):
             return count
 
         return count_greater_than
+
+
+class CountInsideRange(AggregationPrimitive):
+    """Determines the number of values that fall within a certain range.
+
+    Examples:
+    >>> count_inside_range = CountInsideRange(lower=1.5, upper=3.6)
+    >>> count_inside_range([1, 2, 3, 4, 5])
+    2
+    """
+    name = "count_inside_range"
+    input_types = [Numeric]
+    return_type = Numeric
+    default_value = 0
+    description_template = "count_inside_range"
+    stack_on_self = False
+
+    def __init__(self, lower=0, upper=1, skipna=True):
+        self.lower = lower
+        self.upper = upper
+        self.skipna = skipna
+
+    def get_function(self):
+        def count_inside_range(array):
+            count = 0
+            for val in array:
+                if self.skipna == True and not val:
+                    return NaN
+                if val >= self.lower and val <= self.upper:
+                    count += 1
+            return count
+
+        return count_inside_range
