@@ -387,3 +387,36 @@ class CountLessThan(AggregationPrimitive):
             return count
 
         return count_less_than
+
+
+class CountOutsideRange(AggregationPrimitive):
+    """Determines the number of values that fall outside a certain range.
+
+    Examples:
+    >>> count_outside_range = CountOutsideRange(lower=1.5, upper=3.6)
+    >>> count_outside_range([1, 2, 3, 4, 5])
+    3
+    """
+    name = "count_outside_range"
+    input_types = [Numeric]
+    return_type = Numeric
+    default_value = 0
+    description_template = "count_outside_range"
+    stack_on_self = False
+
+    def __init__(self, lower=0, upper=1, skipna=True):
+        self.lower = lower
+        self.upper = upper
+        self.skipna = skipna
+
+    def get_function(self):
+        def count_outside_range(array):
+            count = 0
+            for val in array:
+                if self.skipna == True and not val:
+                    return NaN
+                if val < self.lower or val > self.upper:
+                    count += 1
+            return count
+
+        return count_outside_range
