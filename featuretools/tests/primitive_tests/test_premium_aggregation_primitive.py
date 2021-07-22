@@ -14,7 +14,8 @@ from featuretools.primitives import (
     TimeSinceLastMin,
     TimeSinceLastTrue,
     Variance,
-    CountInsideRange
+    CountInsideRange,
+    CountLessThan
 )
 
 def test_AutoCorrelation():
@@ -82,3 +83,8 @@ def test_Variance():
 def test_CountInsideRange():
     count_inside_range = CountInsideRange(lower=1.5, upper=3.6)
     assert count_inside_range([1, 2, 3, 4, 5])
+
+
+def test_CountLessThan():
+    count_less_than = CountLessThan(threshold=3.5)
+    assert count_less_than([1, 2, 3, 4, 5])

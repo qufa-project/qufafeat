@@ -358,3 +358,32 @@ class CountInsideRange(AggregationPrimitive):
             return count
 
         return count_inside_range
+
+
+class CountLessThan(AggregationPrimitive):
+    """Determines the number of values less than a controllable threshold.
+
+    Examples:
+    >>> count_less_than = CountLessThan(threshold=3.5)
+    >>> count_less_than([1, 2, 3, 4, 5])
+    3
+    """
+    name = "count_less_than"
+    input_types = [Numeric]
+    return_type = Numeric
+    default_value = 0
+    description_template = "count_less_than"
+    stack_on_self = False
+
+    def __init__(self, threshold=3.5):
+        self.threshold = threshold
+
+    def get_function(self):
+        def count_less_than(array):
+            count = 0
+            for val in array:
+                if val < self.threshold:
+                    count += 1
+            return count
+
+        return count_less_than
