@@ -137,7 +137,7 @@ class TimeSinceLastMax(AggregationPrimitive):
 
     def get_function(self):
         def time_since_last_max(values, arr, time=None):
-            maxIndex = np.argmax(arr)
+            maxIndex = arr.idxmax()
             time_since = time - values.iloc[maxIndex]
             return time_since.total_seconds()
 
@@ -167,7 +167,7 @@ class TimeSinceLastMin(AggregationPrimitive):
 
     def get_function(self):
         def time_since_last_min(values, arr, time=None):
-            minIndex = np.argmin(arr)
+            minIndex = arr.idxmin()
             time_since = time - values.iloc[minIndex]
             return time_since.total_seconds()
 
