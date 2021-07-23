@@ -24,7 +24,8 @@ from featuretools.primitives import (
     UpperCaseCount,
     UpperCaseWordCount,
     URLToProtocol,
-    ZIPCodeToState
+    ZIPCodeToState,
+    CountString
 )
 
 
@@ -137,3 +138,9 @@ def test_ZIPCodeToState():
     zip_to_state = ZIPCodeToState()
     states = zip_to_state(['60622', '94120', '02111-1253'])
     assert list(map(str, states)) == ['IL', 'CA', 'MA']
+
+
+def test_CountString():
+    count_string = CountString(string="the")
+    strings = ["The problem was difficult.", "He was there.", "The girl went to the store."]
+    assert count_string(strings).tolist() == [1, 1, 2]

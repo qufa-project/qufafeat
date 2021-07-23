@@ -927,3 +927,46 @@ class ZIPCodeToState(TransformPrimitive):
             return np.array(result)
 
         return zip_to_state
+
+
+class CountString(TransformPrimitive):
+    """Determines how many times a given string shows up in a text field.
+
+    Examples:
+        >>> count_string = CountString(string="the")
+        >>> count_string(["The problem was difficult.",
+        ...               "He was there.",
+        ...               "The girl went to the store."]).tolist()
+        [1, 1, 2]
+    """
+    name = "count_string"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+
+    def __init__(self, string, ignore_case = True, ignore_non_alphanumeric = False, is_regex = False, match_whole_words_only = False):
+        self.string = string
+        self.ignore_case = ignore_case
+        self.ignore_non_alphanumeric = ignore_non_alphanumeric
+        self.is_regex = is_regex
+        self.match_whole_words_only = match_whole_words_only
+
+    def get_function(self):
+        def count_string(array):
+            count = []
+            for value in array:
+                if self.ignore_case:
+                    value = value.lower()
+                    self.string = self.string.lower()
+                if self.ignore_non_alphanumeric:
+                    filtered = filter(str.isalnum, value)
+                    value = "".join(filtered)
+                if self.is_regex:
+                    import re
+                    temp = re.findall(self.string, value)
+                    value = " ".join(temp)
+                if self.match_whole_words_only:
+                    count.append(sum(self.string in value))
+                else: count.append(value.count(self.string))
+            return pandas.Index(count)
+
+        return count_string
