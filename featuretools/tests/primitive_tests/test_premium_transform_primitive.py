@@ -7,11 +7,15 @@ import pytest
 from datetime import datetime
 from featuretools.primitives import (
     AbsoluteDiff,
+    PartOfDay,
+    PercentChange,
     PhoneNumberToCountry,
     PolarityScore,
     PunctuationCount,
     Quarter,
+    SameAsPrevious,
     SavgolFilter,
+    ScorePercentile,
     Season,
     Sign,
     StopwordCount,
@@ -29,6 +33,18 @@ def test_AbsoluteDiff():
     res = absdiff([3.0, -5.0, -2.4]).tolist()
     assert np.isnan(res[0])
     assert res[1:] == [ 8.0, 2.6]
+
+
+def test_PartOfDay():
+    part_of_day = PartOfDay()
+    times = [datetime(2010, 1, 1, 1, 45, 0), datetime(2010, 1, 1, 8, 55, 15), datetime(2010, 1, 1, 16, 55, 15), datetime(2010, 1, 1, 23, 57, 30)]
+    assert part_of_day(times).tolist() == ['Night', 'Morning', 'Afternoon', 'Night']
+
+def test_PercentChange():
+    percent_change = PercentChange()
+    res = percent_change([2, 5, 15, 3, 3, 9, 4.5]).to_list()
+    assert np.isnan(res[0])
+    assert res[1:] == [1.5, 2.0, -0.8, 0.0, 2.0, -0.5]
 
 
 def test_PhoneNumberToCountry():
@@ -54,10 +70,20 @@ def test_Quarter():
     assert quarter(times).tolist() == [1, 3, 4, 2]
 
 
+def test_SameAsPrevious():
+    same_as_previous = SameAsPrevious()
+    assert same_as_previous([1, 2, 2, 4]).tolist() == [False, False, True, False]
+
+
 def test_SavgolFilter():
     sav_filter = SavgolFilter()
     data = [0, 1, 1, 2, 3, 4, 5, 7, 8, 7, 9, 9, 12, 11, 12, 14, 15, 17, 17, 17, 20]
     assert [round(x, 4) for x in sav_filter(data).tolist()[:3]] == [0.0429, 0.8286, 1.2571]
+
+
+def test_ScorePercentile():
+    percent = ScorePercentile(scores=list(range(1, 11)))
+    assert percent([1, 5, 10, 11, 0]).tolist() == [10.0, 50.0, 100.0, 100.0, 0.0]
 
 
 def test_Season():

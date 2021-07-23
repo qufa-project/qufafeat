@@ -9,6 +9,7 @@ import re
 from pyzipcode import ZipCodeDatabase
 from pandas import Series
 from scipy.signal import savgol_filter
+from scipy.stats import stats
 from phone_iso3166.country import phone_country
 from nltk.corpus import stopwords
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -209,6 +210,131 @@ class AgeUnder65(AgeUnderN):
         return AgeUnderN.get_function_helper(self, 65)
 
 
+class PartOfDay(TransformPrimitive):
+    """Determines what part of the day a particular time value falls in.
+
+    Description:
+        Given a list of datetimes, determine part of day based on the hour.
+        The options are: Morning (5am-11am), Afternoon (12pm-5pm), Evening (6pm-9pm), or Night (10pm-4am).
+        If the date is missing, return `NaN`.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> part_of_day = PartOfDay()
+        >>> times = [datetime(2010, 1, 1, 1, 45, 0),
+        ...          datetime(2010, 1, 1, 8, 55, 15),
+        ...          datetime(2010, 1, 1, 16, 55, 15),
+        ...          datetime(2010, 1, 1, 23, 57, 30)]
+        >>> part_of_day(times).tolist()
+        ['Night', 'Morning', 'Afternoon', 'Night']
+    """
+    name = "part_of_day"
+    input_types = [Datetime]
+    return_type = Categorical
+    description_template = "what part of the day {} falls in"
+
+    def get_function(self):
+        def part_of_day(values):
+            result = []
+            for value in values:
+                hour = value.hour
+                if 5 <= hour <= 11:
+                    result.append('Morning')
+                elif 12 <= hour <= 17:
+                    result.append('Afternoon')
+                elif 18 <= hour <= 21:
+                    result.append('Evening')
+                else:
+                    result.append('Night')
+            return np.array(result)
+
+        return part_of_day
+
+
+class PercentChange(TransformPrimitive):
+    """Determines the percent difference between values in a list.
+
+    Description:
+        Given a list of numbers, return the percent difference between each subsequent number.
+        Percentages are shown in decimal form (not multiplied by 100).
+
+    Args:
+        periods (int) : Periods to shift for calculating percent change.
+            Default is 1.
+        fill_method (str) : Method for filling gaps in reindexed Series.
+            Valid options are `backfill`, `bfill`, `pad`, `ffill`.
+            `pad / ffill`: fill gap with last valid observation.
+            `backfill / bfill`: fill gap with next valid observation.
+            Default is `pad`.
+        limit (int) : The max number of consecutive NaN values in a gap that can be filled.
+            Default is None.
+        freq (DateOffset, timedelta, or str) : Instead of calcualting change between subsequent points, PercentChange will calculate change between points with a certain interval between their date indices.
+            `freq` defines the desired interval.
+            When freq is used, the resulting index will also be filled to include any missing dates from the specified interval.
+            If the index is not date/datetime and freq is used, it will raise a NotImplementedError.
+            If freq is None, no changes will be applied.
+            Default is None
+
+    Examples:
+        >>> percent_change = PercentChange()
+        >>> percent_change([2, 5, 15, 3, 3, 9, 4.5]).to_list()
+        [nan, 1.5, 2.0, -0.8, 0.0, 2.0, -0.5]
+
+        We can control the number of periods to return the percent difference between points further from one another.
+
+        >>> percent_change_2 = PercentChange(periods=2)
+        >>> percent_change_2([2, 5, 15, 3, 3, 9, 4.5]).to_list()
+        [nan, nan, 6.5, -0.4, -0.8, 2.0, 0.5]
+
+        We can control the method used to handle gaps in data.
+
+        >>> percent_change = PercentChange()
+        >>> percent_change([2, 4, 8, None, 16, None, 32, None]).to_list()
+        [nan, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0]
+        >>> percent_change_backfill = PercentChange(fill_method='backfill')
+        >>> percent_change_backfill([2, 4, 8, None, 16, None, 32, None]).to_list()
+        [nan, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, nan]
+
+        We can control the maximum number of NaN values to fill in a gap.
+
+        >>> percent_change = PercentChange()
+        >>> percent_change([2, None, None, None, 4]).to_list()
+        [nan, 0.0, 0.0, 0.0, 1.0]
+        >>> percent_change_limited = PercentChange(limit=2)
+        >>> percent_change_limited([2, None, None, None, 4]).to_list()
+        [nan, 0.0, 0.0, nan, nan]
+
+        We can specify a date frequency on which to calculate percent change.
+
+        >>> import pandas as pd
+        >>> dates = pd.DatetimeIndex(['2018-01-01', '2018-01-02', '2018-01-03', '2018-01-05'])
+        >>> x_indexed = pd.Series([1, 2, 3, 4], index=dates)
+        >>> percent_change = PercentChange()
+        >>> percent_change(x_indexed).to_list()
+        [nan, 1.0, 0.5, 0.33333333333333326]
+        >>> date_offset = pd.tseries.offsets.DateOffset(1)
+        >>> percent_change_freq = PercentChange(freq=date_offset)
+        >>> percent_change_freq(x_indexed).to_list()
+        [nan, 1.0, 0.5, nan]
+    """
+    name = "percent_change"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the percent difference between values in {}"
+
+    def __init__(self, periods=1, fill_method='pad', limit=None, freq=None):
+        self.periods = periods
+        self.fill_method = fill_method
+        self.limit = limit
+        self.freq = freq
+
+    def get_function(self):
+        def pct_change(values):
+            return values.pct_change(periods=self.periods, fill_method=self.fill_method, limit=self.limit, freq=self.freq)
+
+        return pct_change
+
+
 class PhoneNumberToCountry(TransformPrimitive):
     """Determines the country of a phone number.
 
@@ -333,6 +459,65 @@ class Quarter(TransformPrimitive):
         return quarter
 
 
+class SameAsPrevious(TransformPrimitive):
+    """Determines if a value is equal to the previous value in a list.
+
+    Description:
+        Compares a value in a list to the previous value and returns True if the value is equal to the previous value or False otherwise.
+        The first item in the output will always be False, since there is no previous element for the first element comparison.
+        Any nan values in the input will be filled using either a forward-fill or backward-fill method, specified by the fill_method argument.
+        The number of consecutive nan values that get filled can be limited with the limit argument.
+        Any nan values left after filling will result in False being returned for any comparison involving the nan value.
+
+    Args:
+        fill_method (str) : Method for filling gaps in series.
+            Validoptions are `backfill`, `bfill`, `pad`, `ffill`.
+            `pad / ffill`: fill gap with last valid observation.
+            `backfill / bfill`: fill gap with next valid observation.
+            Default is `pad`.
+        limit (int) : The max number of consecutive NaN values in a gap that can be filled.
+            Default is None.
+
+    Examples:
+        >>> same_as_previous = SameAsPrevious()
+        >>> same_as_previous([1, 2, 2, 4]).tolist()
+        [False, False, True, False]
+
+        The fill method for nan values can be specified
+
+        >>> same_as_previous_fillna = SameAsPrevious(fill_method="bfill")
+        >>> same_as_previous_fillna([1, None, 2, 4]).tolist()
+        [False, False, True, False]
+
+        The number of nan values that are filled can be limited
+
+        >>> same_as_previous_limitfill = SameAsPrevious(limit=2)
+        >>> same_as_previous_limitfill([1, None, None, None, 2, 3]).tolist()
+        [False, True, True, False, False, False]
+    """
+    name = "same_as_previous"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "determines if a value is equal to the previous value in {}"
+
+    def __init__(self, fill_method='pad', limit=None):
+        self.fill_method = fill_method
+        self.limit = limit
+
+    def get_function(self):
+        def same_as_pre(values):
+            fill_values = values.interpolate(method=self.fill_method, limit=self.limit)
+            result = [False]
+            for i in range(1, len(fill_values)):
+                if fill_values[i-1] == fill_values[i]:
+                    result.append(True)
+                else:
+                    result.append(False)
+            return np.array(result)
+
+        return same_as_pre
+
+
 class SavgolFilter(TransformPrimitive):
     """Applies a Savitzky-Golay filter to a list of values.
 
@@ -403,6 +588,35 @@ class SavgolFilter(TransformPrimitive):
             return savgol_filter(values, self.window_length, self.polyorder, self.deriv, self.delta, self.axis, self.mode, self.cval)
 
         return sav_filter
+
+
+class ScorePercentile(TransformPrimitive):
+    """Determines the percentile of each value against an array of scores.
+
+    Description:
+        Given a list of numbers, return the approximate percentile of each number compared to a given array of scores.
+
+    Args:
+        scores (array) : Array of values to which our input values are compared.
+
+    Examples:
+        >>> percentile = ScorePercentile(scores=list(range(1, 11)))
+        >>> percentile([1, 5, 10, 11, 0]).tolist()
+        [10.0, 50.0, 100.0, 100.0, 0.0]
+    """
+    name = "score_percentile"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the percentile of {} against scores"
+
+    def __init__(self, scores):
+        self.scores = scores
+
+    def get_function(self):
+        def score_percent(values):
+            return np.array([stats.percentileofscore(self.scores, value) for value in values])
+
+        return score_percent
 
 
 class Season(TransformPrimitive):
