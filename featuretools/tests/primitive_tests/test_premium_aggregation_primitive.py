@@ -23,7 +23,8 @@ from featuretools.primitives import (
     CountInsideRange,
     CountLessThan,
     CountOutsideRange,
-    CountInsideNthSTD
+    CountInsideNthSTD,
+    CountOutsideNthSTD
 )
 
 def test_AutoCorrelation():
@@ -136,3 +137,8 @@ def test_CountOutsideRange():
 def test_CountInsideNthSTD():
     count_inside_nth_std = CountInsideNthSTD(n=1.5)
     assert count_inside_nth_std([1, 10, 15, 20, 100])
+
+
+def test_CountOutsideNthSTD():
+    count_outside_nth_std = CountOutsideNthSTD(n=1.5)
+    assert count_outside_nth_std([1, 10, 15, 20, 100])
