@@ -5,6 +5,8 @@ from numpy.core.numeric import NaN
 import pandas as pd
 from dask import dataframe as dd
 from scipy import stats
+from scipy.signal import find_peaks
+from haversine import haversine
 
 from featuretools.primitives.base.aggregation_primitive_base import (
     AggregationPrimitive
@@ -17,6 +19,7 @@ from featuretools.variable_types import (
     DatetimeTimeIndex,
     Discrete,
     Index,
+    LatLong,
     Numeric,
     Variable
 )
@@ -74,6 +77,236 @@ class Correlation(AggregationPrimitive):
             return pd.Series.corr(values1, values2, method=self.method)
 
         return corr
+
+
+class NumFalseSinceLastTrue(AggregationPrimitive):
+    """Calculates the number of 'False' values since the last `True` value.
+
+    Description:
+        From a series of Booleans, find the last record with a `True` value.
+        Return the count of 'False' values between that record and the end of the series.        Return nan if no values are `False`.
+        Return nan if no values are `True`.
+        Any nan values in the input are ignored.
+        A 'True' value in the last row will result in a count of 0.
+        Inputs are converted too booleans before calculating the result.
+
+    Examples:
+        >>> num_false_since_last_true = NumFalseSinceLastTrue()
+        >>> num_false_since_last_true([True, False, True, False, False])
+        2
+    """
+    name = "num_false_since_last_true"
+    input_types = [Boolean]
+    return_type = Numeric
+    description_template = "the number of 'False' values since the last `True` value in {}"
+
+    def get_function(self):
+        def false_since_last_true(values):
+            cnt = 0
+            for i in range(len(values) - 1, -1, -1):
+                if np.isnan(values[i]):
+                    continue
+                if not values[i]:
+                    cnt += 1
+                else:
+                    return cnt
+            return np.nan
+
+        return false_since_last_true
+
+
+class NumPeaks(AggregationPrimitive):
+    """Determines the number of peaks in a list of numbers.
+
+    Description:
+        Given a list of numbers, count the number of local maxima.
+
+    Examples:
+        >>> num_peaks = NumPeaks()
+        >>> num_peaks([-5, 0, 10, 0, 10, -5, -4, -5, 10, 0])
+        4
+    """
+    name = "num_peaks"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the number of peaks in {}"
+
+    def get_function(self):
+        def num_peaks(values):
+            return len(find_peaks(values)[0])
+
+        return num_peaks
+
+
+class NumTrueSinceLastFalse(AggregationPrimitive):
+    """Calculates the number of 'True' values since the last `False` value.
+
+    Description:
+        From a series of Booleans, find the last record with a `False` value.
+        Return the count of 'True' values between that record and the end of the series.
+        Return nan if no values are `False`.
+        Any nan values in the input are ignored.
+        A 'False' value in the last row will result in a count of 0.
+
+    Examples:
+        >>> num_true_since_last_false = NumTrueSinceLastFalse()
+        >>> num_true_since_last_false([False, True, False, True, True])
+        2
+    """
+    name = "num_true_since_last_false"
+    input_types = [Boolean]
+    return_type = Numeric
+    description_template = "the number of 'True' values since the last `False` value in {}"
+
+    def get_function(self):
+        def true_since_last_false(values):
+            cnt = 0
+            for i in range(len(values) - 1, -1, -1):
+                if np.isnan(values[i]):
+                    continue
+                if values[i]:
+                    cnt += 1
+                else:
+                    return cnt
+            return np.nan
+
+        return true_since_last_false
+
+
+class NumZeroCrossings(AggregationPrimitive):
+    """Determines the number of times a list crosses 0.
+
+    Description:
+        Given a list of numbers, return the number of times the value crosses 0.
+        It is the number of times the value goes from a positive number to a negative number, or a negative number to a positive number.
+        NaN values are ignored.
+
+    Examples:
+        >>> num_zero_crossings = NumZeroCrossings()
+        >>> num_zero_crossings([1, -1, 2, -2, 3, -3])
+        5
+    """
+    name = "num_zero_crossings"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the number of times {} crosses 0."
+
+    def get_function(self):
+        def zero_crossings(values):
+            not_nan_list = []
+            for value in values:
+                if not np.isnan(value):
+                    not_nan_list.append(value)
+            return (np.diff(np.sign(not_nan_list)) != 0).sum()
+
+        return zero_crossings
+
+
+class PathLength(AggregationPrimitive):
+    """Determines the length of a path defined by a series of coordinates.
+
+    Description:
+        Given a list of latitude and longitude points, sum the distance of between each subsequent point to get the total length of the path.
+        Distance is calculated using the Haversine formula with a earth radius of 3958.7613 miles (6371.0088 kilometers).
+
+    Args:
+        unit (str) : Distance units used for the output.
+            Defaults to miles.
+            Should be one of ['miles', 'kilometers'].
+        skipna (bool) : Determines whether to skip over missing latitude or longitude values.
+            If True, all rows with missing values will be dropped before computing the total distance.
+            If False, and missing values are present, PathLength will return np.nan.
+            Defaults to True.
+
+    Examples:
+        >>> path_length = PathLength()
+        >>> path_length([(41.881832, -87.623177), (38.6270, -90.1994), (39.0997, -94.5786)])
+        500.52711614147347
+
+        We can return the length in kilometers.
+
+        >>> path_length_km = PathLength(unit='kilometers')
+        >>> path_length_km([(41.881832, -87.623177), (38.6270, -90.1994), (39.0997, -94.5786)])
+        805.5203180792812
+
+        `NaN`s are skipped by default.
+
+        >>> round(path_length([(41.881832, -87.623177), None, (39.0997, -94.5786)]), 3)
+        412.765
+
+        The way `NaN`s are treated can be controlled.
+
+        >>> path_length_skipna = PathLength(skipna=False)
+        >>> path_length_skipna([(41.881832, -87.623177), None, (39.0997, -94.5786)])
+        nan
+    """
+    name = "path_length"
+    input_types = [LatLong]
+    return_type = Numeric
+    description_template = "the length of {}"
+
+    def __init__(self, unit='miles', skipna=True):
+        if unit == 'miles':
+            self.unit = 'mi'
+        else:
+            self.unit = 'km'
+        self.skipna = skipna
+
+    def get_function(self):
+        def path_len(values):
+            if self.skipna:
+                values = list(filter(None, values))
+            else:
+                for value in values:
+                    if not ('tuple' in str(type(value))):
+                        return np.nan
+
+            sum = 0
+            for i in range(1, len(values)):
+                sum += haversine(values[i-1], values[i], unit=self.unit)
+            return sum
+
+        return path_len
+
+
+class PercentUnique(AggregationPrimitive):
+    """Determines the percent of unique values.
+
+    Description:
+        Given a list of values, determine what percent of the list is made up of unique values.
+        Multiple `NaN` values are treated as one unique value.
+
+    Args:
+        skipna (bool) : Determines whether to ignore `NaN` values.
+            Defaults to True.
+
+    Examples:
+        >>> percent_unique = PercentUnique()
+        >>> percent_unique([1, 1, 2, 2, 3, 4, 5, 6, 7, 8])
+        0.8
+
+        We can control whether or not `NaN` values are ignored.
+
+        >>> percent_unique = PercentUnique()
+        >>> percent_unique([1, 1, 2, None])
+        0.5
+        >>> percent_unique_skipna = PercentUnique(skipna=False)
+        >>> percent_unique_skipna([1, 1, 2, None])
+        0.75
+    """
+    name = "percent_unique"
+    input_types = [Discrete]
+    return_type = Numeric
+    description_template = "the percent of unique values in {}"
+
+    def __init__(self, skipna=True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def pct_uniq(values):
+            return len(values.value_counts(dropna=self.skipna)) / len(values)
+
+        return pct_uniq
 
 
 class TimeSinceLastFalse(AggregationPrimitive):

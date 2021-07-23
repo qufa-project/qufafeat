@@ -9,6 +9,12 @@ from featuretools.primitives import (
     CountAboveMean,
     CountBelowMean,
     CountGreaterThan,
+    NumFalseSinceLastTrue,
+    NumPeaks,
+    NumTrueSinceLastFalse,
+    NumZeroCrossings,
+    PathLength,
+    PercentUnique,
     TimeSinceLastFalse,
     TimeSinceLastMax,
     TimeSinceLastMin,
@@ -44,6 +50,36 @@ def test_CountBelowMean():
 def test_CountGreaterThan():
     count_greater_than = CountGreaterThan()
     assert count_greater_than([1, 2, 3, 4, 5])
+
+
+def test_NumFalseSinceLastTrue():
+    false_since_last_true = NumFalseSinceLastTrue()
+    assert false_since_last_true([True, False, True, False, False]) == 2
+
+
+def test_NumPeaks():
+    num_peaks = NumPeaks()
+    assert num_peaks([-5, 0, 10, 0, 10, -5, -4, -5, 10, 0]) == 4
+
+
+def test_NumTrueSinceLastFalse():
+    true_since_last_false = NumTrueSinceLastFalse()
+    assert true_since_last_false([False, True, False, True, True]) == 2
+
+
+def test_NumZeroCrossings():
+    zero_crossings = NumZeroCrossings()
+    assert zero_crossings([1, -1, 2, -2, 3, -3]) == 5
+
+
+def test_PathLength():
+    path_len = PathLength(unit='kilometers')
+    assert path_len([(41.881832, -87.623177), (38.6270, -90.1994), (39.0997, -94.5786)]) == 805.5203180792812
+
+
+def test_PercentUnique():
+    percent_uniq = PercentUnique()
+    assert percent_uniq([1, 1, 2, 2, 3, 4, 5, 6, 7, 8]) == 0.8
 
 
 def test_TimeSinceLastFalse():
