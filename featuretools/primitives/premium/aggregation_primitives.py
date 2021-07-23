@@ -7,6 +7,7 @@ from dask import dataframe as dd
 from scipy import stats
 from scipy.signal import find_peaks
 from haversine import haversine
+import math
 
 from featuretools.primitives.base.aggregation_primitive_base import (
     AggregationPrimitive
@@ -653,3 +654,38 @@ class CountOutsideRange(AggregationPrimitive):
             return count
 
         return count_outside_range
+
+
+class CountInsideNthSTD(AggregationPrimitive):
+    """Determines the count of observations that lie inside the first N standard deviations (inclusive).
+
+    Examples:
+    >>> count_inside_nth_std = CountInsideNthSTD(n=1.5)
+    >>> count_inside_nth_std([1, 10, 15, 20, 100])
+    4
+    """
+    name = "count_inside_nth_std"
+    input_types = [Numeric]
+    return_type = Numeric
+    default_value = 0
+    description_template = "count_inside_nth_std"
+    stack_on_self = False
+
+    def __init__(self, n=1):
+        self.n = n
+
+    def get_function(self):
+        def count_inside_nth_std(array):
+            count = 0
+            mean = sum(array) / len(array)
+            std = 0
+            for val in array:
+                std += (val-mean) ** 2
+            std_dev = std / len(array)
+            std_dev = math.sqrt(std_dev)
+            for val in array:
+                if val <= std_dev:
+                    count += 1
+            return count
+
+        return count_inside_nth_std
