@@ -12,3 +12,4 @@ sklearn
 pyzipcode
 phone_iso3166
 ntlk
+haversine
