@@ -41,17 +41,17 @@ def test_Correlation():
 
 def test_CountAboveMean():
     count_above_mean = CountAboveMean()
-    assert count_above_mean([1, 2, 3, 4, 5])
+    assert count_above_mean([1, 2, 3, 4, 5]) == 2
 
 
 def test_CountBelowMean():
     count_below_mean = CountBelowMean()
-    assert count_below_mean([1, 2, 3, 4, 10])
+    assert count_below_mean([1, 2, 3, 4, 10]) == 3
 
 
 def test_CountGreaterThan():
     count_greater_than = CountGreaterThan()
-    assert count_greater_than([1, 2, 3, 4, 5])
+    assert count_greater_than([1, 2, 3, 4, 5]) == 2
 
 
 def test_NumFalseSinceLastTrue():
@@ -121,24 +121,24 @@ def test_Variance():
 
 def test_CountInsideRange():
     count_inside_range = CountInsideRange(lower=1.5, upper=3.6)
-    assert count_inside_range([1, 2, 3, 4, 5])
+    assert count_inside_range([1, 2, 3, 4, 5]) == 2
 
 
 def test_CountLessThan():
     count_less_than = CountLessThan(threshold=3.5)
-    assert count_less_than([1, 2, 3, 4, 5])
+    assert count_less_than([1, 2, 3, 4, 5]) == 3
 
 
 def test_CountOutsideRange():
     count_outside_range = CountOutsideRange(lower=1.5, upper=3.6)
-    assert count_outside_range([1, 2, 3, 4, 5])
+    assert count_outside_range([1, 2, 3, 4, 5]) == 3
 
 
 def test_CountInsideNthSTD():
     count_inside_nth_std = CountInsideNthSTD(n=1.5)
-    assert count_inside_nth_std([1, 10, 15, 20, 100])
+    assert count_inside_nth_std([1, 10, 15, 20, 100]) == 4
 
 
 def test_CountOutsideNthSTD():
     count_outside_nth_std = CountOutsideNthSTD(n=1.5)
-    assert count_outside_nth_std([1, 10, 15, 20, 100])
+    assert count_outside_nth_std([1, 10, 15, 20, 100]) == 1
