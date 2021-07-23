@@ -11,5 +11,5 @@ click>=7.0.0
 sklearn
 pyzipcode
 phone_iso3166
-ntlk
+nltk
 haversine
