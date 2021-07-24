@@ -1010,3 +1010,38 @@ class CumulativeTimeSinceLastFalse(TransformPrimitive):
             return pandas.Index(count)
 
         return cumulative_time_since_last_false
+
+
+class CumulativeTimeSinceLastTrue(TransformPrimitive):
+    """Determines the time (in seconds) since the last boolean was `True` given a datetime index column and boolean column
+
+    Examples:
+        >>> cumulative_time_since_last_true = CumulativeTimeSinceLastTrue()
+        >>> booleans = [False, True, False, True]
+        >>> datetimes = [
+        ...     datetime(2011, 4, 9, 10, 30, 0),
+        ...     datetime(2011, 4, 9, 10, 30, 10),
+        ...     datetime(2011, 4, 9, 10, 30, 15),
+        ...     datetime(2011, 4, 9, 10, 30, 30)
+        ... ]
+        >>> cumulative_time_since_last_true(datetimes, booleans).tolist()
+        [nan, 0.0, 5.0, 0.0]
+    """
+    name = "cumulative_time_since_last_true"
+    input_types = [DatetimeTimeIndex, Boolean]
+    return_type = Numeric
+
+    def get_function(self):
+        def cumulative_time_since_last_true(datetimes, booleans):
+            count = []
+            last_true = 0
+            for idx, val in enumerate(booleans):
+                if val == True:
+                    last_true = idx
+                    count.append(0.0)
+                else:
+                    cum = datetimes[idx] - datetimes[last_true]
+                    count.append(float(cum.total_seconds()))
+            return pandas.Index(count)
+
+        return cumulative_time_since_last_true

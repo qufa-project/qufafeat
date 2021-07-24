@@ -26,7 +26,8 @@ from featuretools.primitives import (
     URLToProtocol,
     ZIPCodeToState,
     CountString,
-    CumulativeTimeSinceLastFalse
+    CumulativeTimeSinceLastFalse,
+    CumulativeTimeSinceLastTrue
 )
 
 
@@ -157,3 +158,15 @@ def test_CumulativeTimeSinceLastFalse():
         datetime(2011, 4, 9, 10, 30, 29)
     ]
     assert cumulative_time_since_last_false(datetimes, booleans).tolist() == [0.0, 10.0, 0.0, 14.0]
+
+
+def test_CumulativeTimeSinceLastTrue():
+    cumulative_time_since_last_true = CumulativeTimeSinceLastTrue()
+    booleans = [False, True, False, True]
+    datetimes = [
+        datetime(2011, 4, 9, 10, 30, 0),
+        datetime(2011, 4, 9, 10, 30, 10),
+        datetime(2011, 4, 9, 10, 30, 15),
+        datetime(2011, 4, 9, 10, 30, 30)
+    ]
+    assert cumulative_time_since_last_true(datetimes, booleans).tolist() == [0.0, 0.0, 5.0, 0.0]
