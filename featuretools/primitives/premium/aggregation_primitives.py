@@ -22,7 +22,8 @@ from featuretools.variable_types import (
     Index,
     LatLong,
     Numeric,
-    Variable
+    Variable,
+    Datetime
 )
 
 
@@ -724,3 +725,29 @@ class CountOutsideNthSTD(AggregationPrimitive):
             return count
 
         return count_outside_nth_std
+
+
+class DateFirstEvent(AggregationPrimitive):
+    """Determines the first datetime from a list of datetimes.
+
+    Examples:
+    >>> date_first_event = DateFirstEvent()
+    >>> date_first_event([
+    ...     datetime(2011, 4, 9, 10, 30, 10),
+    ...     datetime(2011, 4, 9, 10, 30, 20),
+    ...     datetime(2011, 4, 9, 10, 30, 30)])
+    Timestamp('2011-04-09 10:30:10')
+    """
+    name = "date_first_event"
+    input_types = [DatetimeTimeIndex]
+    return_type = Datetime
+    default_value = 0
+    description_template = "date_first_event"
+    stack_on_self = False
+
+    def get_function(self):
+        def date_first_event(datetimes):
+            sorted_list = datetimes.sort_values()
+            return sorted_list[0]
+
+        return date_first_event

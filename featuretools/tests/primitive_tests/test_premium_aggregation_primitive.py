@@ -24,7 +24,8 @@ from featuretools.primitives import (
     CountLessThan,
     CountOutsideRange,
     CountInsideNthSTD,
-    CountOutsideNthSTD
+    CountOutsideNthSTD,
+    DateFirstEvent
 )
 
 def test_AutoCorrelation():
@@ -142,3 +143,12 @@ def test_CountInsideNthSTD():
 def test_CountOutsideNthSTD():
     count_outside_nth_std = CountOutsideNthSTD(n=1.5)
     assert count_outside_nth_std([1, 10, 15, 20, 100]) == 1
+
+
+def test_DateFirstEvent():
+    date_first_event = DateFirstEvent()
+    first_event = date_first_event([
+        datetime(2011, 4, 9, 10, 30, 10),
+        datetime(2011, 4, 9, 10, 30, 20),
+        datetime(2011, 4, 9, 10, 30, 30)])
+    assert first_event == datetime(2011, 4, 9, 10, 30, 10)
