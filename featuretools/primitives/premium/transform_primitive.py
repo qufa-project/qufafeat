@@ -1079,3 +1079,31 @@ class DateToTimeZone(TransformPrimitive):
             return pandas.Index(time_zone)
 
         return date_to_time_zone
+
+
+class DayName(TransformPrimitive):
+    """Transforms a date into the weekday name for the date.
+
+    Examples:
+        >>> day_name = DayName()
+        >>> dates = pd.Series([datetime(2016, 1, 1),
+        ...          datetime(2016, 2, 27),
+        ...          datetime(2017, 5, 29, 10, 30, 5),
+        ...          datetime(2018, 7, 18)])
+        >>> day_name(dates).tolist()
+        ['Friday', 'Saturday', 'Monday', 'Wednesday']
+    """
+    name = "day_name"
+    input_types = [Datetime]
+    return_type = Categorical
+
+    def get_function(self):
+        def day_name(dates):
+            days = []
+            day_name = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            for value in dates:
+                day = value.weekday()
+                days.append(day_name[day])
+            return pandas.Index(days)
+
+        return day_name

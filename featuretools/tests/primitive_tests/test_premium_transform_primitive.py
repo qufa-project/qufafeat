@@ -29,7 +29,8 @@ from featuretools.primitives import (
     CountString,
     CumulativeTimeSinceLastFalse,
     CumulativeTimeSinceLastTrue,
-    DateToTimeZone
+    DateToTimeZone,
+    DayName
 )
 
 
@@ -181,3 +182,12 @@ def test_DateToTimeZone():
              datetime(2010, 1, 1, tzinfo=timezone("America/Chicago")),
              datetime(2010, 1, 1)]
     assert date_to_time_zone(dates).tolist() == ['America/Los_Angeles', 'America/New_York', 'America/Chicago', None]
+
+
+def test_DayName():
+    day_name = DayName()
+    dates = pd.Series([datetime(2016, 1, 1),
+            datetime(2016, 2, 27),
+            datetime(2017, 5, 29, 10, 30, 5),
+            datetime(2018, 7, 18)])
+    assert day_name(dates).tolist() == ['Friday', 'Saturday', 'Monday', 'Wednesday']
