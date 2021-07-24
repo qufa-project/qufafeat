@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from datetime import datetime
+from pytz import timezone
 from featuretools.primitives import (
     AbsoluteDiff,
     PartOfDay,
@@ -27,7 +28,8 @@ from featuretools.primitives import (
     ZIPCodeToState,
     CountString,
     CumulativeTimeSinceLastFalse,
-    CumulativeTimeSinceLastTrue
+    CumulativeTimeSinceLastTrue,
+    DateToTimeZone
 )
 
 
@@ -170,3 +172,12 @@ def test_CumulativeTimeSinceLastTrue():
         datetime(2011, 4, 9, 10, 30, 30)
     ]
     assert cumulative_time_since_last_true(datetimes, booleans).tolist() == [0.0, 0.0, 5.0, 0.0]
+
+
+def test_DateToTimeZone():
+    date_to_time_zone = DateToTimeZone()
+    dates = [datetime(2010, 1, 1, tzinfo=timezone("America/Los_Angeles")),
+             datetime(2010, 1, 1, tzinfo=timezone("America/New_York")),
+             datetime(2010, 1, 1, tzinfo=timezone("America/Chicago")),
+             datetime(2010, 1, 1)]
+    assert date_to_time_zone(dates).tolist() == ['America/Los_Angeles', 'America/New_York', 'America/Chicago', None]

@@ -1045,3 +1045,37 @@ class CumulativeTimeSinceLastTrue(TransformPrimitive):
             return pandas.Index(count)
 
         return cumulative_time_since_last_true
+
+
+class DateToTimeZone(TransformPrimitive):
+    """Determines the timezone of a datetime.
+
+    Description:
+        Given a list of datetimes, extract the timezone from each one.
+        Looks for the `tzinfo` attribute on `datetime.datetime` objects.
+        If the datetime has no timezone or the date is missing, return `NaN`.
+
+    Examples:
+        >>> date_to_time_zone = DateToTimeZone()
+        >>> dates = [datetime(2010, 1, 1, tzinfo=timezone("America/Los_Angeles")),
+        ...          datetime(2010, 1, 1, tzinfo=timezone("America/New_York")),
+        ...          datetime(2010, 1, 1, tzinfo=timezone("America/Chicago")),
+        ...          datetime(2010, 1, 1)]
+        >>> date_to_time_zone(dates).tolist()
+        ['America/Los_Angeles', 'America/New_York', 'America/Chicago', nan]
+    """
+    name = "date_to_time_zone"
+    input_types = [Datetime]
+    return_type = Categorical
+
+    def get_function(self):
+        def date_to_time_zone(dates):
+            time_zone = []
+            for value in dates:
+                if value.tzinfo:
+                    time_zone.append(str(value.tzinfo))
+                else:
+                    time_zone.append(None)
+            return pandas.Index(time_zone)
+
+        return date_to_time_zone
