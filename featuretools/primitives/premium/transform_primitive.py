@@ -970,3 +970,43 @@ class CountString(TransformPrimitive):
             return pandas.Index(count)
 
         return count_string
+
+
+class CumulativeTimeSinceLastFalse(TransformPrimitive):
+    """Determines the time since last `False` value.
+
+    Description:
+        Given a list of booleans and a list of corresponding datetimes, determine the time at each point since the last `False` value.
+        Returns time difference in seconds.
+        `NaN` values are ignored.
+
+    Examples:
+        >>> cumulative_time_since_last_false = CumulativeTimeSinceLastFalse()
+        >>> booleans = [False, True, False, True]
+        >>> datetimes = [
+        ...     datetime(2011, 4, 9, 10, 30, 0),
+        ...     datetime(2011, 4, 9, 10, 30, 10),
+        ...     datetime(2011, 4, 9, 10, 30, 15),
+        ...     datetime(2011, 4, 9, 10, 30, 29)
+        ... ]
+        >>> cumulative_time_since_last_false(datetimes, booleans).tolist()
+        [0.0, 10.0, 0.0, 14.0]
+    """
+    name = "cumulative_time_since_last_false"
+    input_types = [DatetimeTimeIndex, Boolean]
+    return_type = Numeric
+
+    def get_function(self):
+        def cumulative_time_since_last_false(datetimes, booleans):
+            count = []
+            last_false = 0
+            for idx, val in enumerate(booleans):
+                if val == False:
+                    last_false = idx
+                    count.append(0.0)
+                else:
+                    cum = datetimes[idx] - datetimes[last_false]
+                    count.append(float(cum.total_seconds()))
+            return pandas.Index(count)
+
+        return cumulative_time_since_last_false

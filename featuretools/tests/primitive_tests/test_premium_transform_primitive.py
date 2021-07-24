@@ -25,7 +25,8 @@ from featuretools.primitives import (
     UpperCaseWordCount,
     URLToProtocol,
     ZIPCodeToState,
-    CountString
+    CountString,
+    CumulativeTimeSinceLastFalse
 )
 
 
@@ -144,3 +145,15 @@ def test_CountString():
     count_string = CountString(string="the")
     strings = ["The problem was difficult.", "He was there.", "The girl went to the store."]
     assert count_string(strings).tolist() == [1, 1, 2]
+
+
+def test_CumulativeTimeSinceLastFalse():
+    cumulative_time_since_last_false = CumulativeTimeSinceLastFalse()
+    booleans = [False, True, False, True]
+    datetimes = [
+        datetime(2011, 4, 9, 10, 30, 0),
+        datetime(2011, 4, 9, 10, 30, 10),
+        datetime(2011, 4, 9, 10, 30, 15),
+        datetime(2011, 4, 9, 10, 30, 29)
+    ]
+    assert cumulative_time_since_last_false(datetimes, booleans).tolist() == [0.0, 10.0, 0.0, 14.0]
