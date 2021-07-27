@@ -6,6 +6,8 @@ import string
 import pandas
 import re
 
+
+from datetime import datetime, timedelta
 from pyzipcode import ZipCodeDatabase
 from pandas import Series
 from scipy.signal import savgol_filter
@@ -208,6 +210,82 @@ class AgeUnder65(AgeUnderN):
 
     def get_function(self):
         return AgeUnderN.get_function_helper(self, 65)
+
+
+class NaturalLanguageToYear(TransformPrimitive):
+    """Extracts the year from a string
+
+    Description:
+        If a year is present in a string, extract the year.
+        This will only match years between 1800 and 2199.
+        Years will not be extracted if immediately preceeded or followed by another number or letter.
+        If there are multiple years present in a string, only the first year will be returned.
+
+    Examples:
+        >>> text_to_year = NaturalLanguageToYear()
+        >>> array = pd.Series(["The year was 1887.",
+        ...                    "This string has no year",
+        ...                    "Toy Story (1995)",
+        ...                    "12451997abc"])
+        >>> text_to_year(array).tolist()
+        ['1887', nan, '1995', nan]
+    """
+    name = "natural_language_to_year"
+    input_types = [NaturalLanguage]
+    return_type = Ordinal
+    description_template = "the year from {}"
+
+    def get_function(self):
+        def lang_to_year(values):
+            result = []
+            for value in values:
+                numbers = re.findall('\d+', value)
+                find = False
+                for number in numbers:
+                    if 1800 <= int(number) < 2200:
+                        result.append(int(number))
+                        find = True
+                        break
+                if not find:
+                    result.append(np.nan)
+            return np.array(result)
+
+        return lang_to_year
+
+
+class NthWeekOfMonth(TransformPrimitive):
+    """Determines the nth week of the month from a given date.
+
+    Description:
+        Converts a datetime to an float representing the week of the month in which the date falls.
+        The first day of the month starts week 1, and the week number is incremented each Sunday.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> nth_week_of_month = NthWeekOfMonth()
+        >>> times = [datetime(2019, 3, 1),
+        ...          datetime(2019, 3, 3),
+        ...          datetime(2019, 3, 31),
+        ...          datetime(2019, 3, 30)]
+        >>> nth_week_of_month(times).tolist()
+        [1.0, 2.0, 6.0, 5.0]
+    """
+    name = "nth_week_of_month"
+    input_types = [Datetime]
+    return_type = Numeric
+    description_template = "the nth week of the month from {}"
+
+    def get_function(self):
+        def nth_week(dates):
+            result = []
+            for date in dates:
+                first_day = date.replace(day=1)
+                if first_day.weekday() < 6:
+                    first_day = first_day - timedelta(days=first_day.weekday()+1)
+                result.append((date - first_day).days // 7 + 1)
+            return np.array(result)
+
+        return nth_week
 
 
 class PartOfDay(TransformPrimitive):

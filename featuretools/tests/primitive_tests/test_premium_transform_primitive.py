@@ -8,6 +8,8 @@ from datetime import datetime
 from pytz import timezone
 from featuretools.primitives import (
     AbsoluteDiff,
+    NaturalLanguageToYear,
+    NthWeekOfMonth,
     PartOfDay,
     PercentChange,
     PhoneNumberToCountry,
@@ -39,6 +41,22 @@ def test_AbsoluteDiff():
     res = absdiff([3.0, -5.0, -2.4]).tolist()
     assert np.isnan(res[0])
     assert res[1:] == [ 8.0, 2.6]
+
+
+def test_NaturalLanguageToYear():
+    text_to_year = NaturalLanguageToYear()
+    array = pd.Series(["The year was 1887.", "This string has no year", "Toy Story (1995)", "12451997abc"])
+    res = text_to_year(array).tolist()
+    assert res[0] == 1887
+    assert np.isnan(res[1])
+    assert res[2] == 1995
+    assert np.isnan(res[3])
+
+
+def test_NthWeekOfMonth():
+    nth_week_of_month = NthWeekOfMonth()
+    times = [datetime(2019, 3, 1), datetime(2019, 3, 3), datetime(2019, 3, 31), datetime(2019, 3, 30)]
+    assert nth_week_of_month(times).tolist() == [1.0, 2.0, 6.0, 5.0]
 
 
 def test_PartOfDay():
