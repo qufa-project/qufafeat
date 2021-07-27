@@ -7,6 +7,8 @@ from dask import dataframe as dd
 from scipy import stats
 from scipy.signal import find_peaks
 from haversine import haversine
+from collections import Counter
+from pandas import Series
 import math
 
 from featuretools.primitives.base.aggregation_primitive_base import (
@@ -79,6 +81,340 @@ class Correlation(AggregationPrimitive):
             return pd.Series.corr(values1, values2, method=self.method)
 
         return corr
+
+
+class NMostCommonFrequency(AggregationPrimitive):
+    """Determines the frequency of the n most common items.
+
+    Description:
+        Given a list, find the n most common items, and return a series showing the frequency of each item.
+        If the list has less than n unique values, the resulting series will be padded with nan.
+
+    Args:
+        n (int) : defines "n" in "n most common".
+            Defaults to 3.
+        skipna (bool) : Determines if to use NA/null values.
+            Defaults to True to skip NA/null.
+
+    Examples:
+        >>> n_most_common_frequency = NMostCommonFrequency()
+        >>> n_most_common_frequency([1, 1, 1, 2, 2, 3, 4, 4]).to_list()
+        [3, 2, 2]
+
+        We can increase n to include more items.
+
+        >>> n_most_common_frequency = NMostCommonFrequency(4)
+        >>> n_most_common_frequency([1, 1, 1, 2, 2, 3, 4, 4]).to_list()
+        [3, 2, 2, 1]
+
+        `NaN`s are skipped by default.
+
+        >>> n_most_common_frequency = NMostCommonFrequency(3)
+        >>> n_most_common_frequency([1, 1, 1, 2, 2, 3, 4, 4, None, None, None]).to_list()
+        [3, 2, 2]
+
+        The way `NaN`s are treated can be controlled.
+
+        >>> n_most_common_frequency = NMostCommonFrequency(3, skipna=False)
+        >>> n_most_common_frequency([1, 1, 1, 2, 2, 3, 4, 4, None, None, None]).to_list()
+        [3, 3, 2]
+    """
+    name = "n_most_common_frequency"
+    input_types = [Discrete]
+    return_type = Discrete
+    description_template = "the frequency of the n most common items in {}"
+
+    def __init__(self, n=3, skipna=True):
+        self.n = n
+        self.skipna = skipna
+
+    def get_function(self):
+        def most_common_freq(values):
+            not_nan_list = []
+            nan_cnt = 0
+            for value in values:
+                if not np.isnan(value):
+                    not_nan_list.append(value)
+                else:
+                    nan_cnt += 1
+            freq_list = list(Counter(not_nan_list).values())
+            if not self.skipna:
+                freq_list.append(nan_cnt)
+
+            freq_list.sort(reverse=True)
+            if len(freq_list) >= self.n:
+                result = freq_list[:self.n]
+            else:
+                result = freq_list + [np.nan] * (self.n-len(freq_list))
+            return Series(result)
+
+        return most_common_freq
+
+
+class NUniqueDays(AggregationPrimitive):
+    """Determines the number of unique days.
+
+    Description:
+        Given a list of datetimes, return the number of unique days.
+        The same day in two different years is treated as different.
+        So Feb 21, 2017 is different than Feb 21, 2019, even though they are both the 21st of February.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> n_unique_days = NUniqueDays()
+        >>> times = [datetime(2019, 2, 1),
+        ...          datetime(2019, 2, 1),
+        ...          datetime(2018, 2, 1),
+        ...          datetime(2019, 1, 1)]
+        >>> n_unique_days(times)
+        3
+    """
+    name = "n_unique_days"
+    input_types = [Datetime]
+    return_type = Numeric
+    description_template = "the number of unique days in {}"
+
+    def get_function(self):
+        def uniq_days(dates):
+            uniq = {(date.year, date.month, date.day) for date in dates}
+            return len(uniq)
+
+        return uniq_days
+
+
+class NUniqueDaysOfCalendarYear(AggregationPrimitive):
+    """Determines the number of unique calendar days.
+
+    Description:
+        Given a list of datetimes, return the number of unique calendar days.
+        The same date in two different years is counted as one.
+        So Feb 21, 2017 is not unique from Feb 21, 2019.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> n_unique_days_of_calendar_year = NUniqueDaysOfCalendarYear()
+        >>> times = [datetime(2019, 2, 1),
+        ...          datetime(2019, 2, 1),
+        ...          datetime(2018, 2, 1),
+        ...          datetime(2019, 1, 1)]
+        >>> n_unique_days_of_calendar_year(times)
+        2
+    """
+    name = "n_unique_days_of_calendar_year"
+    input_types = [Datetime]
+    return_type = Numeric
+    description_template = "the number of unique calendar days in {}"
+
+    def get_function(self):
+        def uniq_cal_year(dates):
+            uniq = {(date.month, date.day) for date in dates}
+            return len(uniq)
+
+        return uniq_cal_year
+
+
+class NUniqueDaysOfMonth(AggregationPrimitive):
+    """Determines the number of unique days of month.
+
+    Description:
+        Given a list of datetimes, return the number of unique days of month.
+        The maximum value is 31.
+        2018-01-01 and 2018-02-01 will be counted as 1 unique day.
+        2019-01-01 and 2018-01-01 will also be counted as 1.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> n_unique_days_of_month = NUniqueDaysOfMonth()
+        >>> times = [datetime(2019, 1, 1),
+        ...          datetime(2019, 2, 1),
+        ...          datetime(2018, 2, 1),
+        ...          datetime(2019, 1, 2),
+        ...          datetime(2019, 1, 3)]
+        >>> n_unique_days_of_month(times)
+        3
+    """
+    name = "n_unique_days_of_month"
+    input_types = [Datetime]
+    return_type = Numeric
+    description_template = "the number of unique days of month in {}"
+
+    def get_function(self):
+        def uniq_days_of_month(dates):
+            uniq = {date.day for date in dates}
+            return len(uniq)
+
+        return uniq_days_of_month
+
+
+class NUniqueMonths(AggregationPrimitive):
+    """Determines the number of unique months.
+
+    Description:
+        Given a list of datetimes, return the number of unique months.
+        NUniqueMonths counts absolute month, not month of year, so the same month in two different years is treated as different.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> n_unique_months = NUniqueMonths()
+        >>> times = [datetime(2019, 1, 1),
+        ...          datetime(2019, 1, 2),
+        ...          datetime(2019, 1, 3),
+        ...          datetime(2019, 2, 1),
+        ...          datetime(2018, 2, 1)]
+        >>> n_unique_months(times)
+        3
+    """
+    name = "n_unique_months"
+    input_types = [Datetime]
+    return_type = Numeric
+    description_template = "the number of unique months in {}"
+
+    def get_function(self):
+        def uniq_months(dates):
+            uniq = {(date.year, date.month) for date in dates}
+            return len(uniq)
+
+        return uniq_months
+
+
+class NUniqueWeeks(AggregationPrimitive):
+    """Determines the number of unique weeks.
+
+    Description:
+        Given a list of datetimes, return the number of unique weeks (Monday-Sunday).
+        NUniqueWeeks counts by absolute week, not week of year, so the first week of 2018 and the first week of 2019 count as two unique values.
+
+    Examples:
+        >>> from datetime import datetime
+        >>> n_unique_weeks = NUniqueWeeks()
+        >>> times = [datetime(2018, 2, 2),
+        ...          datetime(2019, 1, 1),
+        ...          datetime(2019, 2, 1),
+        ...          datetime(2019, 2, 1),
+        ...          datetime(2019, 2, 3),
+        ...          datetime(2019, 2, 21)]
+        >>> n_unique_weeks(times)
+        4
+    """
+    name = "n_unique_weeks"
+    input_types = [Datetime]
+    return_type = Numeric
+    description_template = "the number of unique weeks in {}"
+
+    def get_function(self):
+        def uniq_weeks(dates):
+            uniq = {(date.isocalendar()[0], date.isocalendar()[1]) for date in dates}
+            return len(uniq)
+
+        return uniq_weeks
+
+
+class NumConsecutiveGreaterMean(AggregationPrimitive):
+    """Determines the length of the longest subsequence above the mean.
+
+    Description:
+        Given a list of numbers, find the longest subsequence of numbers larger than the mean of the entire sequence.
+        Return the length of the longest subsequence.
+
+    Args:
+        skipna (bool) : If this is False and any value in x is `NaN`, then the result will be `NaN`.
+            If True, `NaN` values are skipped.
+            Default is True.
+
+    Examples:
+        >>> num_consecutive_greater_mean = NumConsecutiveGreaterMean()
+        >>> num_consecutive_greater_mean([1, 2, 3, 4, 5, 6])
+        3.0
+
+        We can control the way `NaN` values are handled.
+
+        >>> num_consecutive_greater_mean = NumConsecutiveGreaterMean(skipna=False)
+        >>> num_consecutive_greater_mean([1, 2, 3, 4, 5, 6, None])
+        nan
+    """
+    name = "num_consecutive_greater_mean"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the length of the longest subsequence above the mean of {}"
+
+    def __init__(self, skipna=True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def consecutive_greater_mean(values):
+            if not self.skipna:
+                for value in values:
+                    if np.isnan(value):
+                        return np.nan
+
+            mean = np.mean(values)
+            max_len = 0
+            cur_len = 0
+            for value in values:
+                if value > mean:
+                    cur_len += 1
+                else:
+                    cur_len = 0
+                if max_len < cur_len:
+                    max_len = cur_len
+            return max_len
+
+        return consecutive_greater_mean
+
+
+
+
+class NumConsecutiveLessMean(AggregationPrimitive):
+    """Determines the length of the longest subsequence below the mean.
+
+    Description:
+        Given a list of numbers, find the longest subsequence of numbers smaller than the mean of the entire sequence.
+        Return the length of the longest subsequence.
+
+    Args:
+        skipna (bool) : If this is False and any value in x is `NaN`, then the result will be `NaN`.
+            If True, `NaN` values are skipped.
+            Default is True.
+
+    Examples:
+        >>> num_consecutive_less_mean = NumConsecutiveLessMean()
+        >>> num_consecutive_less_mean([1, 2, 3, 4, 5, 6])
+        3.0
+
+        We can control the way `NaN` values are handled.
+
+        >>> num_consecutive_less_mean = NumConsecutiveLessMean(skipna=False)
+        >>> num_consecutive_less_mean([1, 2, 3, 4, 5, 6, None])
+        nan
+    """
+    name = "num_consecutive_less_mean"
+    input_types = [Numeric]
+    return_type = Numeric
+    description_template = "the length of the longest subsequence below the mean of {}"
+
+    def __init__(self, skipna=True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def consecutive_less_mean(values):
+            if not self.skipna:
+                for value in values:
+                    if np.isnan(value):
+                        return np.nan
+
+            mean = np.mean(values)
+            max_len = 0
+            cur_len = 0
+            for value in values:
+                if value < mean:
+                    cur_len += 1
+                else:
+                    cur_len = 0
+                if max_len < cur_len:
+                    max_len = cur_len
+            return max_len
+
+        return consecutive_less_mean
 
 
 class NumFalseSinceLastTrue(AggregationPrimitive):

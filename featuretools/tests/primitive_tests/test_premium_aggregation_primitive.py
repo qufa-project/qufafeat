@@ -3,12 +3,21 @@ import featuretools as ft
 import pytest
 
 from datetime import datetime
+import numpy as np
 from featuretools.primitives import (
     Autocorrelation,
     Correlation,
     CountAboveMean,
     CountBelowMean,
     CountGreaterThan,
+    NMostCommonFrequency,
+    NUniqueDays,
+    NUniqueDaysOfCalendarYear,
+    NUniqueDaysOfMonth,
+    NUniqueMonths,
+    NUniqueWeeks,
+    NumConsecutiveGreaterMean,
+    NumConsecutiveLessMean,
     NumFalseSinceLastTrue,
     NumPeaks,
     NumTrueSinceLastFalse,
@@ -53,6 +62,51 @@ def test_CountBelowMean():
 def test_CountGreaterThan():
     count_greater_than = CountGreaterThan()
     assert count_greater_than([1, 2, 3, 4, 5]) == 2
+
+
+def test_NMostCommonFrequency():
+    n_most_common_frequency = NMostCommonFrequency(4)
+    assert n_most_common_frequency([1, 1, 1, 2, 2, 3, 4, 4]).to_list() == [3, 2, 2, 1]
+
+
+def test_NUniqueDays():
+    n_unique_days = NUniqueDays()
+    times = [datetime(2019, 2, 1), datetime(2019, 2, 1), datetime(2018, 2, 1), datetime(2019, 1, 1)]
+    assert n_unique_days(times) == 3
+
+
+def test_NUniqueDaysOfCalendarYear():
+    n_unique_days_of_calendar_year = NUniqueDaysOfCalendarYear()
+    times = [datetime(2019, 2, 1), datetime(2019, 2, 1), datetime(2018, 2, 1), datetime(2019, 1, 1)]
+    assert n_unique_days_of_calendar_year(times) == 2
+
+
+def test_NUniqueDaysOfMonth():
+    n_unique_days_of_month = NUniqueDaysOfMonth()
+    times = [datetime(2019, 1, 1), datetime(2019, 2, 1), datetime(2018, 2, 1), datetime(2019, 1, 2), datetime(2019, 1, 3)]
+    assert n_unique_days_of_month(times) == 3
+
+
+def test_NUniqueMonths():
+    n_unique_months = NUniqueMonths()
+    times = [datetime(2019, 1, 1), datetime(2019, 1, 2), datetime(2019, 1, 3), datetime(2019, 2, 1), datetime(2018, 2, 1)]
+    assert n_unique_months(times) == 3
+
+
+def test_NUniqueWeeks():
+    n_unique_weeks = NUniqueWeeks()
+    times = [datetime(2018, 2, 2), datetime(2019, 1, 1), datetime(2019, 2, 1), datetime(2019, 2, 1), datetime(2019, 2, 3), datetime(2019, 2, 21)]
+    assert n_unique_weeks(times) == 4
+
+
+def test_NumConsecutiveGreaterMean():
+    num_consecutive_greater_mean = NumConsecutiveGreaterMean(skipna=False)
+    assert np.isnan(num_consecutive_greater_mean([1, 2, 3, 4, 5, 6, None]))
+
+
+def test_NumConsecutiveLessMean():
+    num_consecutive_less_mean = NumConsecutiveLessMean()
+    assert num_consecutive_less_mean([1, 2, 3, 4, 5, 6]) == 3.0
 
 
 def test_NumFalseSinceLastTrue():
