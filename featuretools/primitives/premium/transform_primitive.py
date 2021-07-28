@@ -1,3 +1,4 @@
+from featuretools.variable_types.variable import Discrete
 import warnings
 
 import numpy as np
@@ -5,7 +6,7 @@ import numpy as np
 import string
 import pandas
 import re
-
+import math
 
 from datetime import datetime, timedelta
 from pyzipcode import ZipCodeDatabase
@@ -1185,3 +1186,203 @@ class DayName(TransformPrimitive):
             return pandas.Index(days)
 
         return day_name
+
+
+class GreaterThanPrevious(TransformPrimitive):
+    """Determines if a value is greater than the previous value in a list.
+
+    Description:
+        Compares a value in a list to the previous value and returns True if the value is greater than the previous value or False otherwise.
+        The first item in the output will always be False, since there is no previous element for the first element comparison.
+        Any nan values in the input will be filled using either a forward-fill or backward-fill method, specified by the fill_method argument.
+        The number of consecutive nan values that get filled can be limited with the limit argument.
+        Any nan values left after filling will result in False being returned for any comparison involving the nan value.
+
+    Examples:
+        >>> greater_than_previous = GreaterThanPrevious()
+        >>> greater_than_previous([1, 2, 1, 4]).tolist()
+        [False, True, False, True]
+    """
+    name = "greater_than_previous"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, fill_method = "pad", limit = None):
+        self.fill_method = fill_method
+        self.limit = limit
+
+    def get_function(self):
+        def greater_than_previous(numbers):
+            results = [False]
+            for idx in range(len(numbers)-1):
+                if numbers[idx+1] > numbers[idx]:
+                    results.append(True)
+                else:
+                    results.append(False)
+            return pandas.Index(results)
+
+        return greater_than_previous
+
+
+class IsFirstOccurrence(TransformPrimitive):
+    """Determines whether a value is the first occurrence of the value in a list.
+
+    Examples:
+        >>> is_first_occurrence = IsFirstOccurrence()
+        >>> is_first_occurrence([1, 2, 2, 3, 1]).tolist()
+        [True, True, False, True, False]
+    """
+    name = "is_first_occurrence"
+    input_types = [Discrete]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_first_occurrence(numbers):
+            results = [True]
+            for idx in range(1, len(numbers)):
+                for before in range(idx):
+                    if numbers[idx] == numbers[before]:
+                        results.append(False)
+                        break
+                if len(results) != (idx + 1): results.append(True)
+            return pandas.Index(results)
+
+        return is_first_occurrence
+
+
+class IsLastOccurrence(TransformPrimitive):
+    """Determines whether a value is the last occurrence of the value in a list.
+
+    Examples:
+        >>> is_last_occurrence = IsLastOccurrence()
+        >>> is_last_occurrence([1, 2, 2, 3, 1]).tolist()
+        [False, False, True, True, True]
+    """
+    name = "is_last_occurrence"
+    input_types = [Discrete]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_last_occurrence(numbers):
+            results = []
+            for idx in range(len(numbers)):
+                for after in range(idx+1, len(numbers)):
+                    if numbers[idx] == numbers[after]:
+                        results.append(False)
+                        break
+                if len(results) != (idx + 1): results.append(True)
+            return pandas.Index(results)
+
+        return is_last_occurrence
+
+
+class IsMaxSoFar(TransformPrimitive):
+    """Determines if a number in a list is larger than every value before it.
+
+    Examples:
+        >>> is_max_so_far = IsMaxSoFar()
+        >>> is_max_so_far([2, 3, 5, 1, 3, 10]).tolist()
+        [True, True, True, False, False, True]
+
+    """
+    name = "is_max_so_far"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_max_so_far(numbers):
+            max = numbers[0]
+            results = []
+            for val in numbers:
+                if val >= max:
+                    results.append(True)
+                    max = val
+                else: results.append(False)
+            return pandas.Index(results)
+
+        return is_max_so_far
+
+
+class IsMinSoFar(TransformPrimitive):
+    """Determines if a number in a list is smaller than every value before it.
+
+    Examples:
+        >>> is_min_so_far = IsMinSoFar()
+        >>> is_min_so_far([2, 3, 5, 1, 3, 10]).tolist()
+        [True, False, False, True, False, False]
+
+    """
+    name = "is_min_so_far"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_min_so_far(numbers):
+            min = numbers[0]
+            results = []
+            for val in numbers:
+                if val <= min:
+                    results.append(True)
+                    min = val
+                else: results.append(False)
+            return pandas.Index(results)
+
+        return is_min_so_far
+
+
+class IsWholeNumber(TransformPrimitive):
+    """Determines whether a float is a whole number.
+
+    Description:
+        Given a list of floats, determine whether each number is whole.
+        If number has any non-zero decmial value, return `False`.
+        If the number is missing, return `NaN`.
+
+    Examples:
+        >>> is_whole_number = IsWholeNumber()
+        >>> x = [1.0, 1.1, 1.00000001, 100.0, None]
+        >>> is_whole_number(x).tolist()
+        [True, False, False, True, nan]
+    """
+    name = "is_whole_number"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_whole_number(numbers):
+            results = []
+            for val in numbers:
+                if math.isnan(val):
+                    results.append(None)
+                elif val == int(val):
+                    results.append(True)
+                else:
+                    results.append(False)
+            return pandas.Index(results)
+
+        return is_whole_number
+
+
+class IsZero(TransformPrimitive):
+    """Determines whether a number is equal to zero.
+
+    Examples:
+        >>> is_zero = IsZero()
+        >>> is_zero([1, 0, 0.00, 4]).tolist()
+        [False, True, True, False]
+    """
+    name = "is_zero"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_zero(numbers):
+            results = []
+            for val in numbers:
+                if val == 0:
+                    results.append(True)
+                else:
+                    results.append(False)
+            return pandas.Index(results)
+
+        return is_zero

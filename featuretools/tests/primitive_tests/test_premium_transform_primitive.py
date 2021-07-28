@@ -32,7 +32,14 @@ from featuretools.primitives import (
     CumulativeTimeSinceLastFalse,
     CumulativeTimeSinceLastTrue,
     DateToTimeZone,
-    DayName
+    DayName,
+    GreaterThanPrevious,
+    IsFirstOccurrence,
+    IsLastOccurrence,
+    IsMaxSoFar,
+    IsMinSoFar,
+    IsWholeNumber,
+    IsZero
 )
 
 
@@ -209,3 +216,40 @@ def test_DayName():
             datetime(2017, 5, 29, 10, 30, 5),
             datetime(2018, 7, 18)])
     assert day_name(dates).tolist() == ['Friday', 'Saturday', 'Monday', 'Wednesday']
+
+
+def test_GreaterThanPrevious():
+    greater_than_previous = GreaterThanPrevious()
+    assert greater_than_previous([1, 2, 1, 4]).tolist() == [False, True, False, True]
+
+
+def test_IsFirstOccurrence():
+    is_first_occurrence = IsFirstOccurrence()
+    assert is_first_occurrence([1, 2, 2, 3, 1]).tolist() == [True, True, False, True, False]
+
+
+def test_IsLastOccurrence():
+    is_last_occurrence = IsLastOccurrence()
+    assert is_last_occurrence([1, 2, 2, 3, 1]).tolist() == [False, False, True, True, True]
+
+
+def test_IsMaxSoFar():
+    is_max_so_far = IsMaxSoFar()
+    assert is_max_so_far([2, 3, 5, 1, 3, 10]).tolist() == [True, True, True, False, False, True]
+
+
+def test_IsMinSoFar():
+    is_min_so_far = IsMinSoFar()
+    assert is_min_so_far([2, 3, 5, 1, 3, 10]).tolist() == [True, False, False, True, False, False]
+
+
+def test_IsWholeNumber():
+    is_whole_number = IsWholeNumber()
+    x = [1.0, 1.1, 1.00000001, 100.0, None]
+    assert is_whole_number(x).tolist() == [True, False, False, True, None]
+
+
+def test_IsZero():
+    is_zero = IsZero()
+    x = [1.0, 1.1, 1.00000001, 100.0, None]
+    assert is_zero([1, 0, 0.00, 4]).tolist() == [False, True, True, False]

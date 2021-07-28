@@ -34,7 +34,11 @@ from featuretools.primitives import (
     CountOutsideRange,
     CountInsideNthSTD,
     CountOutsideNthSTD,
-    DateFirstEvent
+    DateFirstEvent,
+    HasNoDuplicates,
+    IsMonotonicallyDecreasing,
+    IsMonotonicallyIncreasing,
+    IsUnique
 )
 
 def test_AutoCorrelation():
@@ -206,3 +210,23 @@ def test_DateFirstEvent():
         datetime(2011, 4, 9, 10, 30, 20),
         datetime(2011, 4, 9, 10, 30, 30)])
     assert first_event == datetime(2011, 4, 9, 10, 30, 10)
+
+
+def test_HasNoDuplicates():
+    has_no_duplicates = HasNoDuplicates()
+    assert has_no_duplicates([1, 1, 2]) == False
+
+
+def test_IsMonotonicallyDecreasing():
+    is_monotonically_decreasing = IsMonotonicallyDecreasing()
+    assert is_monotonically_decreasing([9, 5, 3, 1]) == True
+
+
+def test_IsMonotonicallyIncreasing():
+    is_monotonically_increasing = IsMonotonicallyIncreasing()
+    assert is_monotonically_increasing([1, 3, 5, 9]) == True
+
+
+def test_IsUnique():
+    is_unique = IsUnique()
+    assert is_unique(['red', 'blue', 'green', 'blue']) == False

@@ -1087,3 +1087,109 @@ class DateFirstEvent(AggregationPrimitive):
             return sorted_list[0]
 
         return date_first_event
+
+
+class HasNoDuplicates(AggregationPrimitive):
+    """Determines if there are duplicates in the input.
+
+    Examples:
+    >>> has_no_duplicates = HasNoDuplicates()
+    >>> has_no_duplicates([1, 1, 2])
+    False
+    >>> has_no_duplicates([1, 2, 3])
+    True    
+    """
+    name = "has_no_duplicates"
+    input_types = [Discrete]
+    return_type = Boolean
+    default_value = 0
+    description_template = "has_no_duplicates"
+    stack_on_self = False
+
+    def get_function(self):
+        def has_no_duplicates(numbers):
+            no_duplicates = set(numbers)
+            if len(numbers) != len(no_duplicates):
+                return False
+            else:
+                return True
+
+        return has_no_duplicates
+
+
+class IsMonotonicallyDecreasing(AggregationPrimitive):
+    """Determines if a series is monotonically decreasing.
+
+    Description:
+        Given a list of numeric values, return True if the values are strictly decreasing.
+        If the series contains `NaN` values, they will be skipped.
+
+    Examples:
+        >>> is_monotonically_decreasing = IsMonotonicallyDecreasing()
+        >>> is_monotonically_decreasing([9, 5, 3, 1])
+        True
+    """
+    name = "is_monotonically_decreasing"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_monotonically_decreasing(numbers):
+            decrease = numbers.sort_values(ascending=False)
+            if decrease.equals(numbers):
+                return True
+            else: return False
+
+        return is_monotonically_decreasing
+
+
+class IsMonotonicallyIncreasing(AggregationPrimitive):
+    """Determines if a series is monotonically increasing.
+
+    Description:
+        Given a list of numeric values, return True if the values are strictly increasing.
+        If the series contains `NaN` values, they will be skipped.
+
+    Examples:
+        >>> is_monotonically_increasing = IsMonotonicallyIncreasing()
+        >>> is_monotonically_increasing([1, 3, 5, 9])
+        True
+    """
+    name = "is_monotonically_increasing"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_monotonically_increasing(numbers):
+            decrease = numbers.sort_values()
+            if decrease.equals(numbers):
+                return True
+            else: return False
+
+        return is_monotonically_increasing
+
+
+class IsUnique(AggregationPrimitive):
+    """Determines whether or not a series of discrete is all unique.
+
+    Description:
+        Given a series of discrete values, return True if each value in the series is unique.
+        If any value is repeated, return False.
+
+    Examples:
+        >>> is_unique = IsUnique()
+        >>> is_unique(['red', 'blue', 'green', 'yellow'])
+        True
+    """
+    name = "is_unique"
+    input_types = [Discrete]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_unique(array):
+            unique = set(array)
+            if len(unique) == len(array):
+                return True
+            else: return False
+
+        return is_unique
