@@ -1115,3 +1115,29 @@ class HasNoDuplicates(AggregationPrimitive):
                 return True
 
         return has_no_duplicates
+
+
+class IsMonotonicallyDecreasing(AggregationPrimitive):
+    """Determines if a series is monotonically decreasing.
+
+    Description:
+        Given a list of numeric values, return True if the values are strictly decreasing.
+        If the series contains `NaN` values, they will be skipped.
+
+    Examples:
+        >>> is_monotonically_decreasing = IsMonotonicallyDecreasing()
+        >>> is_monotonically_decreasing([9, 5, 3, 1])
+        True
+    """
+    name = "is_monotonically_decreasing"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_monotonically_decreasing(numbers):
+            decrease = numbers.sort_values(ascending=False)
+            if decrease.equals(numbers):
+                return True
+            else: return False
+
+        return is_monotonically_decreasing
