@@ -1301,3 +1301,30 @@ class IsMaxSoFar(TransformPrimitive):
             return pandas.Index(results)
 
         return is_max_so_far
+
+
+class IsMinSoFar(TransformPrimitive):
+    """Determines if a number in a list is smaller than every value before it.
+
+    Examples:
+        >>> is_min_so_far = IsMinSoFar()
+        >>> is_min_so_far([2, 3, 5, 1, 3, 10]).tolist()
+        [True, False, False, True, False, False]
+
+    """
+    name = "is_min_so_far"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_min_so_far(numbers):
+            min = numbers[0]
+            results = []
+            for val in numbers:
+                if val <= min:
+                    results.append(True)
+                    min = val
+                else: results.append(False)
+            return pandas.Index(results)
+
+        return is_min_so_far

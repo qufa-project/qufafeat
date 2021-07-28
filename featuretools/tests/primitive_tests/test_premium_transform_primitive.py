@@ -36,7 +36,8 @@ from featuretools.primitives import (
     GreaterThanPrevious,
     IsFirstOccurrence,
     IsLastOccurrence,
-    IsMaxSoFar
+    IsMaxSoFar,
+    IsMinSoFar
 )
 
 
@@ -233,3 +234,9 @@ def test_IsLastOccurrence():
 def test_IsMaxSoFar():
     is_max_so_far = IsMaxSoFar()
     assert is_max_so_far([2, 3, 5, 1, 3, 10]).tolist() == [True, True, True, False, False, True]
+
+
+def test_IsMinSoFar():
+    is_min_so_far = IsMinSoFar()
+    assert is_min_so_far([2, 3, 5, 1, 3, 10]).tolist() == [True, False, False, True, False, False]
+
