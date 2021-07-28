@@ -1248,3 +1248,29 @@ class IsFirstOccurrence(TransformPrimitive):
             return pandas.Index(results)
 
         return is_first_occurrence
+
+
+class IsLastOccurrence(TransformPrimitive):
+    """Determines whether a value is the last occurrence of the value in a list.
+
+    Examples:
+        >>> is_last_occurrence = IsLastOccurrence()
+        >>> is_last_occurrence([1, 2, 2, 3, 1]).tolist()
+        [False, False, True, True, True]
+    """
+    name = "is_last_occurrence"
+    input_types = [Discrete]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_last_occurrence(numbers):
+            results = []
+            for idx in range(len(numbers)):
+                for after in range(idx+1, len(numbers)):
+                    if numbers[idx] == numbers[after]:
+                        results.append(False)
+                        break
+                if len(results) != (idx + 1): results.append(True)
+            return pandas.Index(results)
+
+        return is_last_occurrence

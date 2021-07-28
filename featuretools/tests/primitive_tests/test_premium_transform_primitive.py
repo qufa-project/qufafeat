@@ -34,7 +34,8 @@ from featuretools.primitives import (
     DateToTimeZone,
     DayName,
     GreaterThanPrevious,
-    IsFirstOccurrence
+    IsFirstOccurrence,
+    IsLastOccurrence
 )
 
 
@@ -221,3 +222,8 @@ def test_GreaterThanPrevious():
 def test_IsFirstOccurrence():
     is_first_occurrence = IsFirstOccurrence()
     assert is_first_occurrence([1, 2, 2, 3, 1]).tolist() == [True, True, False, True, False]
+
+
+def test_IsLastOccurrence():
+    is_last_occurrence = IsLastOccurrence()
+    assert is_last_occurrence([1, 2, 2, 3, 1]).tolist() == [False, False, True, True, True]
