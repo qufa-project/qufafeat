@@ -1274,3 +1274,30 @@ class IsLastOccurrence(TransformPrimitive):
             return pandas.Index(results)
 
         return is_last_occurrence
+
+
+class IsMaxSoFar(TransformPrimitive):
+    """Determines if a number in a list is larger than every value before it.
+
+    Examples:
+        >>> is_max_so_far = IsMaxSoFar()
+        >>> is_max_so_far([2, 3, 5, 1, 3, 10]).tolist()
+        [True, True, True, False, False, True]
+
+    """
+    name = "is_max_so_far"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_max_so_far(numbers):
+            max = numbers[0]
+            results = []
+            for val in numbers:
+                if val >= max:
+                    results.append(True)
+                    max = val
+                else: results.append(False)
+            return pandas.Index(results)
+
+        return is_max_so_far

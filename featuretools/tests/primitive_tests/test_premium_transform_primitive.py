@@ -35,7 +35,8 @@ from featuretools.primitives import (
     DayName,
     GreaterThanPrevious,
     IsFirstOccurrence,
-    IsLastOccurrence
+    IsLastOccurrence,
+    IsMaxSoFar
 )
 
 
@@ -227,3 +228,8 @@ def test_IsFirstOccurrence():
 def test_IsLastOccurrence():
     is_last_occurrence = IsLastOccurrence()
     assert is_last_occurrence([1, 2, 2, 3, 1]).tolist() == [False, False, True, True, True]
+
+
+def test_IsMaxSoFar():
+    is_max_so_far = IsMaxSoFar()
+    assert is_max_so_far([2, 3, 5, 1, 3, 10]).tolist() == [True, True, True, False, False, True]
