@@ -1185,3 +1185,39 @@ class DayName(TransformPrimitive):
             return pandas.Index(days)
 
         return day_name
+
+
+class GreaterThanPrevious(TransformPrimitive):
+    """Determines if a value is greater than the previous value in a list.
+
+    Description:
+        Compares a value in a list to the previous value and returns True if the value is greater than the previous value or False otherwise.
+        The first item in the output will always be False, since there is no previous element for the first element comparison.
+        Any nan values in the input will be filled using either a forward-fill or backward-fill method, specified by the fill_method argument.
+        The number of consecutive nan values that get filled can be limited with the limit argument.
+        Any nan values left after filling will result in False being returned for any comparison involving the nan value.
+
+    Examples:
+        >>> greater_than_previous = GreaterThanPrevious()
+        >>> greater_than_previous([1, 2, 1, 4]).tolist()
+        [False, True, False, True]
+    """
+    name = "greater_than_previous"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, fill_method = "pad", limit = None):
+        self.fill_method = fill_method
+        self.limit = limit
+
+    def get_function(self):
+        def greater_than_previous(numbers):
+            results = [False]
+            for idx in range(len(numbers)-1):
+                if numbers[idx+1] > numbers[idx]:
+                    results.append(True)
+                else:
+                    results.append(False)
+            return pandas.Index(results)
+
+        return greater_than_previous

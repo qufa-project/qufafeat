@@ -32,7 +32,8 @@ from featuretools.primitives import (
     CumulativeTimeSinceLastFalse,
     CumulativeTimeSinceLastTrue,
     DateToTimeZone,
-    DayName
+    DayName,
+    GreaterThanPrevious
 )
 
 
@@ -209,3 +210,8 @@ def test_DayName():
             datetime(2017, 5, 29, 10, 30, 5),
             datetime(2018, 7, 18)])
     assert day_name(dates).tolist() == ['Friday', 'Saturday', 'Monday', 'Wednesday']
+
+
+def test_GreaterThanPrevious():
+    greater_than_previous = GreaterThanPrevious()
+    assert greater_than_previous([1, 2, 1, 4]).tolist() == [False, True, False, True]
