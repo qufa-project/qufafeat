@@ -1141,3 +1141,29 @@ class IsMonotonicallyDecreasing(AggregationPrimitive):
             else: return False
 
         return is_monotonically_decreasing
+
+
+class IsMonotonicallyIncreasing(AggregationPrimitive):
+    """Determines if a series is monotonically increasing.
+
+    Description:
+        Given a list of numeric values, return True if the values are strictly increasing.
+        If the series contains `NaN` values, they will be skipped.
+
+    Examples:
+        >>> is_monotonically_increasing = IsMonotonicallyIncreasing()
+        >>> is_monotonically_increasing([1, 3, 5, 9])
+        True
+    """
+    name = "is_monotonically_increasing"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_monotonically_increasing(numbers):
+            decrease = numbers.sort_values()
+            if decrease.equals(numbers):
+                return True
+            else: return False
+
+        return is_monotonically_increasing

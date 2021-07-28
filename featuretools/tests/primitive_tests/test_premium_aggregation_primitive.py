@@ -36,7 +36,8 @@ from featuretools.primitives import (
     CountOutsideNthSTD,
     DateFirstEvent,
     HasNoDuplicates,
-    IsMonotonicallyDecreasing
+    IsMonotonicallyDecreasing,
+    IsMonotonicallyIncreasing
 )
 
 def test_AutoCorrelation():
@@ -218,3 +219,8 @@ def test_HasNoDuplicates():
 def test_IsMonotonicallyDecreasing():
     is_monotonically_decreasing = IsMonotonicallyDecreasing()
     assert is_monotonically_decreasing([9, 5, 3, 1]) == True
+
+
+def test_IsMonotonicallyIncreasing():
+    is_monotonically_increasing = IsMonotonicallyIncreasing()
+    assert is_monotonically_increasing([1, 3, 5, 9]) == True
