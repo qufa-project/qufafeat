@@ -37,7 +37,8 @@ from featuretools.primitives import (
     DateFirstEvent,
     HasNoDuplicates,
     IsMonotonicallyDecreasing,
-    IsMonotonicallyIncreasing
+    IsMonotonicallyIncreasing,
+    IsUnique
 )
 
 def test_AutoCorrelation():
@@ -224,3 +225,8 @@ def test_IsMonotonicallyDecreasing():
 def test_IsMonotonicallyIncreasing():
     is_monotonically_increasing = IsMonotonicallyIncreasing()
     assert is_monotonically_increasing([1, 3, 5, 9]) == True
+
+
+def test_IsUnique():
+    is_unique = IsUnique()
+    assert is_unique(['red', 'blue', 'green', 'blue']) == False

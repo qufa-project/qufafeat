@@ -1167,3 +1167,29 @@ class IsMonotonicallyIncreasing(AggregationPrimitive):
             else: return False
 
         return is_monotonically_increasing
+
+
+class IsUnique(AggregationPrimitive):
+    """Determines whether or not a series of discrete is all unique.
+
+    Description:
+        Given a series of discrete values, return True if each value in the series is unique.
+        If any value is repeated, return False.
+
+    Examples:
+        >>> is_unique = IsUnique()
+        >>> is_unique(['red', 'blue', 'green', 'yellow'])
+        True
+    """
+    name = "is_unique"
+    input_types = [Discrete]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_unique(array):
+            unique = set(array)
+            if len(unique) == len(array):
+                return True
+            else: return False
+
+        return is_unique
