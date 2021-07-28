@@ -1,3 +1,4 @@
+from featuretools.variable_types.variable import Discrete
 import warnings
 
 import numpy as np
@@ -1221,3 +1222,29 @@ class GreaterThanPrevious(TransformPrimitive):
             return pandas.Index(results)
 
         return greater_than_previous
+
+
+class IsFirstOccurrence(TransformPrimitive):
+    """Determines whether a value is the first occurrence of the value in a list.
+
+    Examples:
+        >>> is_first_occurrence = IsFirstOccurrence()
+        >>> is_first_occurrence([1, 2, 2, 3, 1]).tolist()
+        [True, True, False, True, False]
+    """
+    name = "is_first_occurrence"
+    input_types = [Discrete]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_first_occurrence(numbers):
+            results = [True]
+            for idx in range(1, len(numbers)):
+                for before in range(idx):
+                    if numbers[idx] == numbers[before]:
+                        results.append(False)
+                        break
+                if len(results) != (idx + 1): results.append(True)
+            return pandas.Index(results)
+
+        return is_first_occurrence
