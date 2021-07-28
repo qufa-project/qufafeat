@@ -1361,3 +1361,28 @@ class IsWholeNumber(TransformPrimitive):
             return pandas.Index(results)
 
         return is_whole_number
+
+
+class IsZero(TransformPrimitive):
+    """Determines whether a number is equal to zero.
+
+    Examples:
+        >>> is_zero = IsZero()
+        >>> is_zero([1, 0, 0.00, 4]).tolist()
+        [False, True, True, False]
+    """
+    name = "is_zero"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_zero(numbers):
+            results = []
+            for val in numbers:
+                if val == 0:
+                    results.append(True)
+                else:
+                    results.append(False)
+            return pandas.Index(results)
+
+        return is_zero
