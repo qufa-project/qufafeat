@@ -6,7 +6,7 @@ import numpy as np
 import string
 import pandas
 import re
-
+import math
 
 from datetime import datetime, timedelta
 from pyzipcode import ZipCodeDatabase
@@ -1328,3 +1328,36 @@ class IsMinSoFar(TransformPrimitive):
             return pandas.Index(results)
 
         return is_min_so_far
+
+
+class IsWholeNumber(TransformPrimitive):
+    """Determines whether a float is a whole number.
+
+    Description:
+        Given a list of floats, determine whether each number is whole.
+        If number has any non-zero decmial value, return `False`.
+        If the number is missing, return `NaN`.
+
+    Examples:
+        >>> is_whole_number = IsWholeNumber()
+        >>> x = [1.0, 1.1, 1.00000001, 100.0, None]
+        >>> is_whole_number(x).tolist()
+        [True, False, False, True, nan]
+    """
+    name = "is_whole_number"
+    input_types = [Numeric]
+    return_type = Boolean
+
+    def get_function(self):
+        def is_whole_number(numbers):
+            results = []
+            for val in numbers:
+                if math.isnan(val):
+                    results.append(None)
+                elif val == int(val):
+                    results.append(True)
+                else:
+                    results.append(False)
+            return pandas.Index(results)
+
+        return is_whole_number

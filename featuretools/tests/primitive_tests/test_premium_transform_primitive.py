@@ -37,7 +37,8 @@ from featuretools.primitives import (
     IsFirstOccurrence,
     IsLastOccurrence,
     IsMaxSoFar,
-    IsMinSoFar
+    IsMinSoFar,
+    IsWholeNumber
 )
 
 
@@ -240,3 +241,8 @@ def test_IsMinSoFar():
     is_min_so_far = IsMinSoFar()
     assert is_min_so_far([2, 3, 5, 1, 3, 10]).tolist() == [True, False, False, True, False, False]
 
+
+def test_IsWholeNumber():
+    is_whole_number = IsWholeNumber()
+    x = [1.0, 1.1, 1.00000001, 100.0, None]
+    assert is_whole_number(x).tolist() == [True, False, False, True, None]
