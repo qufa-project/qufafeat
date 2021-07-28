@@ -1087,3 +1087,31 @@ class DateFirstEvent(AggregationPrimitive):
             return sorted_list[0]
 
         return date_first_event
+
+
+class HasNoDuplicates(AggregationPrimitive):
+    """Determines if there are duplicates in the input.
+
+    Examples:
+    >>> has_no_duplicates = HasNoDuplicates()
+    >>> has_no_duplicates([1, 1, 2])
+    False
+    >>> has_no_duplicates([1, 2, 3])
+    True    
+    """
+    name = "has_no_duplicates"
+    input_types = [Discrete]
+    return_type = Boolean
+    default_value = 0
+    description_template = "has_no_duplicates"
+    stack_on_self = False
+
+    def get_function(self):
+        def has_no_duplicates(numbers):
+            no_duplicates = set(numbers)
+            if len(numbers) != len(no_duplicates):
+                return False
+            else:
+                return True
+
+        return has_no_duplicates

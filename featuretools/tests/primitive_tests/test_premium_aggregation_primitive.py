@@ -34,7 +34,8 @@ from featuretools.primitives import (
     CountOutsideRange,
     CountInsideNthSTD,
     CountOutsideNthSTD,
-    DateFirstEvent
+    DateFirstEvent,
+    HasNoDuplicates
 )
 
 def test_AutoCorrelation():
@@ -206,3 +207,8 @@ def test_DateFirstEvent():
         datetime(2011, 4, 9, 10, 30, 20),
         datetime(2011, 4, 9, 10, 30, 30)])
     assert first_event == datetime(2011, 4, 9, 10, 30, 10)
+
+
+def test_HasNoDuplicates():
+    has_no_duplicates = HasNoDuplicates()
+    assert has_no_duplicates([1, 1, 2]) == False
