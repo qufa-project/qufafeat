@@ -1383,3 +1383,27 @@ class MaxConsecutiveZeros(AggregationPrimitive):
             return max_count
 
         return max_consecutive_zeros
+
+
+class MaxCount(AggregationPrimitive):
+    """Calculates the number of occurrences of the max value in a list
+
+    Examples:
+        >>> max_count = MaxCount()
+        >>> max_count([1, 2, 5, 1, 5, 3, 5])
+        3
+    """
+    name = "max_count"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_count(array):
+            max_value = max(array)
+            count = list(array).count(max_value)
+            return count
+
+        return max_count

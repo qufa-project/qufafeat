@@ -44,7 +44,8 @@ from featuretools.primitives import (
     MaxConsecutiveNegatives,
     MaxConsecutivePositives,
     MaxConsecutiveTrue,
-    MaxConsecutiveZeros
+    MaxConsecutiveZeros,
+    MaxCount
 )
 
 def test_AutoCorrelation():
@@ -266,3 +267,8 @@ def test_MaxConsecutiveTrue():
 def test_MaxConsecutiveZeros():
     max_consecutive_zeros = MaxConsecutiveZeros()
     assert max_consecutive_zeros([1.0, -1.4, 0, 0.0, 0, -4.3]) == 3
+
+
+def test_MaxCount():
+    max_count = MaxCount()
+    assert max_count([1, 2, 5, 1, 5, 3, 5]) == 3
