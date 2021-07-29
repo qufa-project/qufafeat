@@ -5,6 +5,7 @@ from numpy.core.numeric import NaN
 import pandas as pd
 from dask import dataframe as dd
 from scipy import stats
+import scipy
 from scipy.signal import find_peaks
 from haversine import haversine
 from collections import Counter
@@ -1193,3 +1194,27 @@ class IsUnique(AggregationPrimitive):
             else: return False
 
         return is_unique
+
+
+class Kurtosis(AggregationPrimitive):
+    """Calculates the kurtosis for a list of numbers
+
+    Examples:
+        >>> kurtosis = Kurtosis()
+        >>> kurtosis([1, 2, 3, 4, 5])
+        -1.3
+    """
+    name = "kurtosis"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, fisher = True, bias = True, nan_policy = "propagate"):
+        self.fisher = fisher
+        self.bias = bias
+        self.nan_policy = nan_policy
+
+    def get_function(self):
+        def kurtosis(array):
+            return scipy.stats.kurtosis(array, None, self.fisher, self.bias, self.nan_policy)
+
+        return kurtosis

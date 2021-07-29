@@ -38,7 +38,8 @@ from featuretools.primitives import (
     HasNoDuplicates,
     IsMonotonicallyDecreasing,
     IsMonotonicallyIncreasing,
-    IsUnique
+    IsUnique,
+    Kurtosis
 )
 
 def test_AutoCorrelation():
@@ -230,3 +231,8 @@ def test_IsMonotonicallyIncreasing():
 def test_IsUnique():
     is_unique = IsUnique()
     assert is_unique(['red', 'blue', 'green', 'blue']) == False
+
+
+def test_Kurtosis():
+    kurtosis = Kurtosis()
+    assert kurtosis([1, 2, 3, 4, 5]) == -1.3
