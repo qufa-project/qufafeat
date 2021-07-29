@@ -40,7 +40,8 @@ from featuretools.primitives import (
     IsMinSoFar,
     IsWholeNumber,
     IsZero,
-    Lag
+    Lag,
+    LessThanPrevious
 )
 
 
@@ -259,3 +260,8 @@ def test_IsZero():
 def test_Lag():
     lag = Lag()
     assert lag([1, 2, 3, 4, 5]).tolist() == [None, 1.0, 2.0, 3.0, 4.0]
+
+
+def test_LessThanPrevious():
+    less_than_previous = LessThanPrevious()
+    assert less_than_previous([1, 2, 1, 4]).tolist() == [False, False, True, False]
