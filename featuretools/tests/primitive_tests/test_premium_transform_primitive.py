@@ -39,7 +39,8 @@ from featuretools.primitives import (
     IsMaxSoFar,
     IsMinSoFar,
     IsWholeNumber,
-    IsZero
+    IsZero,
+    Lag
 )
 
 
@@ -253,3 +254,8 @@ def test_IsZero():
     is_zero = IsZero()
     x = [1.0, 1.1, 1.00000001, 100.0, None]
     assert is_zero([1, 0, 0.00, 4]).tolist() == [False, True, True, False]
+
+
+def test_Lag():
+    lag = Lag()
+    assert lag([1, 2, 3, 4, 5]).tolist() == [None, 1.0, 2.0, 3.0, 4.0]

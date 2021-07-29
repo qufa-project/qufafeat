@@ -1,3 +1,4 @@
+from collections import deque
 from featuretools.variable_types.variable import Discrete
 import warnings
 
@@ -1386,3 +1387,30 @@ class IsZero(TransformPrimitive):
             return pandas.Index(results)
 
         return is_zero
+
+
+class Lag(TransformPrimitive):
+    """Shifts an array of values by a specified number of periods.
+
+    Examples:
+        >>> lag = Lag()
+        >>> lag([1, 2, 3, 4, 5]).tolist()
+        [nan, 1.0, 2.0, 3.0, 4.0]
+    """
+    name = "lag"
+    input_types = [Variable]
+    return_type = None
+
+    def __init__(self, periods = 1, fill_value = None):
+        self.periods = periods
+        self.fill_value = fill_value
+
+    def get_function(self):
+        def lag(numbers):
+            results = deque(numbers)
+            results.rotate(self.periods)
+            for i in range(self.periods):
+                results[i] = None
+            return pandas.Index(results)
+
+        return lag
