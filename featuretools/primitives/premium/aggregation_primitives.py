@@ -1407,3 +1407,27 @@ class MaxCount(AggregationPrimitive):
             return count
 
         return max_count
+
+
+class MaxMinDelta(AggregationPrimitive):
+    """Determines the difference between the max and min value.
+
+    Examples:
+        >>> max_min_delta = MaxMinDelta()
+        >>> max_min_delta([7, 2, 5, 3, 10])
+        8
+    """
+    name = "max_min_delta"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_min_delta(array):
+            max_value = max(array)
+            min_value = min(array)
+            return (max_value - min_value)
+
+        return max_min_delta
