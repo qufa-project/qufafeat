@@ -1,3 +1,4 @@
+from collections import deque
 from featuretools.variable_types.variable import Discrete
 import warnings
 
@@ -1386,3 +1387,99 @@ class IsZero(TransformPrimitive):
             return pandas.Index(results)
 
         return is_zero
+
+
+class Lag(TransformPrimitive):
+    """Shifts an array of values by a specified number of periods.
+
+    Examples:
+        >>> lag = Lag()
+        >>> lag([1, 2, 3, 4, 5]).tolist()
+        [nan, 1.0, 2.0, 3.0, 4.0]
+    """
+    name = "lag"
+    input_types = [Variable]
+    return_type = None
+
+    def __init__(self, periods = 1, fill_value = None):
+        self.periods = periods
+        self.fill_value = fill_value
+
+    def get_function(self):
+        def lag(numbers):
+            results = deque(numbers)
+            results.rotate(self.periods)
+            for i in range(self.periods):
+                results[i] = None
+            return pandas.Index(results)
+
+        return lag
+
+
+class LessThanPrevious(TransformPrimitive):
+    """Determines if a value is less than the previous value in a list.
+
+    Description:
+    Compares a value in a list to the previous value and returns True if the value is less than the previous value or False otherwise.
+    The first item in the output will always be False, since there is no previous element for the first element comparison.
+    Any nan values in the input will be filled using either a forward-fill or backward-fill method, specified by the fill_method argument.
+    The number of consecutive nan values that get filled can be limited with the limit argument.
+    Any nan values left after filling will result in False being returned for any comparison involving the nan value.
+
+    Examples:
+        >>> less_than_previous = LessThanPrevious()
+        >>> less_than_previous([1, 2, 1, 4]).tolist()
+        [False, False, True, False]
+    """
+    name = "less_than_previous"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, fill_method = "pad", limit = None):
+        self.fill_method = fill_method
+        self.limit = limit
+
+    def get_function(self):
+        def less_than_previous(numbers):
+            results = [False]
+            for idx in range(len(numbers)-1):
+                if numbers[idx+1] < numbers[idx]:
+                    results.append(True)
+                else:
+                    results.append(False)
+            return pandas.Index(results)
+
+        return less_than_previous
+
+
+class MeanCharactersPerWord(TransformPrimitive):
+    """Determines the mean number of characters per word.
+
+    Description:
+    Given list of strings, determine the mean number of characters per word in each string.
+    A word is defined as a series of any characters not separated by white space.
+    Punctuation is removed before counting.
+    If a string is empty or `NaN`, return `NaN`.
+
+    Examples:
+        >>> x = ['This is a test file', 'This is second line', 'third line $1,000']
+        >>> mean_characters_per_word = MeanCharactersPerWord()
+        >>> mean_characters_per_word(x).tolist()
+        [3.0, 4.0, 5.0]
+    """
+    name = "mean_characters_per_word"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+
+    def get_function(self):
+        def mean_characters_per_word(sentences):
+            count = []
+            for sen in sentences:
+                words = str(sen).split(" ")
+                length = 0
+                for word in words:
+                    length += len(word)
+                count.append(length/len(words))
+            return pandas.Index(count)
+
+        return mean_characters_per_word

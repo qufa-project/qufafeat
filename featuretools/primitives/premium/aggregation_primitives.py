@@ -5,11 +5,13 @@ from numpy.core.numeric import NaN
 import pandas as pd
 from dask import dataframe as dd
 from scipy import stats
+import scipy
 from scipy.signal import find_peaks
 from haversine import haversine
 from collections import Counter
 from pandas import Series
 import math
+import statistics
 
 from featuretools.primitives.base.aggregation_primitive_base import (
     AggregationPrimitive
@@ -1193,3 +1195,288 @@ class IsUnique(AggregationPrimitive):
             else: return False
 
         return is_unique
+
+
+class Kurtosis(AggregationPrimitive):
+    """Calculates the kurtosis for a list of numbers
+
+    Examples:
+        >>> kurtosis = Kurtosis()
+        >>> kurtosis([1, 2, 3, 4, 5])
+        -1.3
+    """
+    name = "kurtosis"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, fisher = True, bias = True, nan_policy = "propagate"):
+        self.fisher = fisher
+        self.bias = bias
+        self.nan_policy = nan_policy
+
+    def get_function(self):
+        def kurtosis(array):
+            return scipy.stats.kurtosis(array, None, self.fisher, self.bias, self.nan_policy)
+
+        return kurtosis
+
+
+class MaxConsecutiveFalse(AggregationPrimitive):
+    """Determines the maximum number of consecutive False values in the input
+
+    Examples:
+        >>> max_consecutive_false = MaxConsecutiveFalse()
+        >>> max_consecutive_false([True, False, False, True, True, False])
+        2
+    """
+    name = "max_consecutive_false"
+    input_types = [Boolean]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_false(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val == False and count == -1:
+                    count = 1
+                elif val == False and count > 0:
+                    count += 1
+                elif val == True:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_false
+
+
+class MaxConsecutiveNegatives(AggregationPrimitive):
+    """Determines the maximum number of consecutive negative values in the input
+
+    Examples:
+        >>> max_consecutive_negatives = MaxConsecutiveNegatives()
+        >>> max_consecutive_negatives([1.0, -1.4, -2.4, -5.4, 2.9, -4.3])
+        3
+    """
+    name = "max_consecutive_negatives"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_negatives(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val < 0 and count == -1:
+                    count = 1
+                elif val < 0 and count > 0:
+                    count += 1
+                elif val >= 0:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_negatives
+
+
+class MaxConsecutivePositives(AggregationPrimitive):
+    """Determines the maximum number of consecutive positive values in the input
+
+    Examples:
+        >>> max_consecutive_positives = MaxConsecutivePositives()
+        >>> max_consecutive_positives([1.0, -1.4, 2.4, 5.4, 2.9, -4.3])
+        3
+    """
+    name = "max_consecutive_positives"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_positives(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val > 0 and count == -1:
+                    count = 1
+                elif val > 0 and count > 0:
+                    count += 1
+                elif val <= 0:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_positives
+
+
+class MaxConsecutiveTrue(AggregationPrimitive):
+    """Determines the maximum number of consecutive True values in the input
+
+    Examples:
+        >>> max_consecutive_true = MaxConsecutiveTrue()
+        >>> max_consecutive_true([True, False, True, True, True, False])
+        3
+    """
+    name = "max_consecutive_true"
+    input_types = [Boolean]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_true(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val == True and count == -1:
+                    count = 1
+                elif val == True and count > 0:
+                    count += 1
+                elif val == False:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_true
+
+
+class MaxConsecutiveZeros(AggregationPrimitive):
+    """Determines the maximum number of consecutive zero values in the input
+
+    Examples:
+        >>> max_consecutive_zeros = MaxConsecutiveZeros()
+        >>> max_consecutive_zeros([1.0, -1.4, 0, 0.0, 0, -4.3])
+        3
+    """
+    name = "max_consecutive_zeros"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_zeros(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val == 0 and count == -1:
+                    count = 1
+                elif val == 0 and count > 0:
+                    count += 1
+                elif val != 0:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_zeros
+
+
+class MaxCount(AggregationPrimitive):
+    """Calculates the number of occurrences of the max value in a list
+
+    Examples:
+        >>> max_count = MaxCount()
+        >>> max_count([1, 2, 5, 1, 5, 3, 5])
+        3
+    """
+    name = "max_count"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_count(array):
+            max_value = max(array)
+            count = list(array).count(max_value)
+            return count
+
+        return max_count
+
+
+class MaxMinDelta(AggregationPrimitive):
+    """Determines the difference between the max and min value.
+
+    Examples:
+        >>> max_min_delta = MaxMinDelta()
+        >>> max_min_delta([7, 2, 5, 3, 10])
+        8
+    """
+    name = "max_min_delta"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_min_delta(array):
+            max_value = max(array)
+            min_value = min(array)
+            return (max_value - min_value)
+
+        return max_min_delta
+
+
+class MedianCount(AggregationPrimitive):
+    """Calculates the number of occurrences of the median value in a list
+
+    Examples:
+        >>> median_count = MedianCount()
+        >>> median_count([1, 2, 3, 1, 5, 3, 5])
+        2
+    """
+    name = "median_count"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def median_count(numbers):
+            median_value = statistics.median(numbers)
+            count = list(numbers).count(median_value)
+            return count
+
+        return median_count
+
+
+class MinCount(AggregationPrimitive):
+    """Calculates the number of occurrences of the min value in a list
+
+    Examples:
+        >>> min_count = MinCount()
+        >>> min_count([1, 2, 5, 1, 5, 3, 5])
+        2
+    """
+    name = "min_count"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def min_count(array):
+            min_value = min(array)
+            count = list(array).count(min_value)
+            return count
+
+        return min_count

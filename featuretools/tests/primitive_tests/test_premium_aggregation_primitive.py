@@ -38,7 +38,17 @@ from featuretools.primitives import (
     HasNoDuplicates,
     IsMonotonicallyDecreasing,
     IsMonotonicallyIncreasing,
-    IsUnique
+    IsUnique,
+    Kurtosis,
+    MaxConsecutiveFalse,
+    MaxConsecutiveNegatives,
+    MaxConsecutivePositives,
+    MaxConsecutiveTrue,
+    MaxConsecutiveZeros,
+    MaxCount,
+    MaxMinDelta,
+    MedianCount,
+    MinCount
 )
 
 def test_AutoCorrelation():
@@ -230,3 +240,53 @@ def test_IsMonotonicallyIncreasing():
 def test_IsUnique():
     is_unique = IsUnique()
     assert is_unique(['red', 'blue', 'green', 'blue']) == False
+
+
+def test_Kurtosis():
+    kurtosis = Kurtosis()
+    assert kurtosis([1, 2, 3, 4, 5]) == -1.3
+
+
+def test_MaxConsecutiveFalse():
+    max_consecutive_false = MaxConsecutiveFalse()
+    assert max_consecutive_false([True, False, False, True, True, False]) == 2
+
+
+def test_MaxConsecutiveNegatives():
+    max_consecutive_negatives = MaxConsecutiveNegatives()
+    assert max_consecutive_negatives([1.0, -1.4, -2.4, -5.4, 2.9, -4.3]) == 3
+
+
+def test_MaxConsecutivePositives():
+    max_consecutive_positives = MaxConsecutivePositives()
+    assert max_consecutive_positives([1.0, -1.4, 2.4, 5.4, 2.9, -4.3]) == 3
+
+
+def test_MaxConsecutiveTrue():
+    max_consecutive_true = MaxConsecutiveTrue()
+    assert max_consecutive_true([True, False, True, True, True, False]) == 3
+
+
+def test_MaxConsecutiveZeros():
+    max_consecutive_zeros = MaxConsecutiveZeros()
+    assert max_consecutive_zeros([1.0, -1.4, 0, 0.0, 0, -4.3]) == 3
+
+
+def test_MaxCount():
+    max_count = MaxCount()
+    assert max_count([1, 2, 5, 1, 5, 3, 5]) == 3
+
+
+def test_MaxMinDelta():
+    max_min_delta = MaxMinDelta()
+    assert max_min_delta([7, 2, 5, 3, 10]) == 8
+
+
+def test_MedianCount():
+    median_count = MedianCount()
+    assert median_count([1, 2, 3, 1, 5, 3, 5]) == 2
+
+
+def test_MinCount():
+    min_count = MinCount()
+    assert min_count([1, 2, 5, 1, 5, 3, 5]) == 2
