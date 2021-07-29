@@ -11,6 +11,7 @@ from haversine import haversine
 from collections import Counter
 from pandas import Series
 import math
+import statistics
 
 from featuretools.primitives.base.aggregation_primitive_base import (
     AggregationPrimitive
@@ -1431,3 +1432,27 @@ class MaxMinDelta(AggregationPrimitive):
             return (max_value - min_value)
 
         return max_min_delta
+
+
+class MedianCount(AggregationPrimitive):
+    """Calculates the number of occurrences of the median value in a list
+
+    Examples:
+        >>> median_count = MedianCount()
+        >>> median_count([1, 2, 3, 1, 5, 3, 5])
+        2
+    """
+    name = "median_count"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def median_count(numbers):
+            median_value = statistics.median(numbers)
+            count = list(numbers).count(median_value)
+            return count
+
+        return median_count
