@@ -47,7 +47,8 @@ from featuretools.primitives import (
     MaxConsecutiveZeros,
     MaxCount,
     MaxMinDelta,
-    MedianCount
+    MedianCount,
+    MinCount
 )
 
 def test_AutoCorrelation():
@@ -284,3 +285,8 @@ def test_MaxMinDelta():
 def test_MedianCount():
     median_count = MedianCount()
     assert median_count([1, 2, 3, 1, 5, 3, 5]) == 2
+
+
+def test_MinCount():
+    min_count = MinCount()
+    assert min_count([1, 2, 5, 1, 5, 3, 5]) == 2

@@ -1456,3 +1456,27 @@ class MedianCount(AggregationPrimitive):
             return count
 
         return median_count
+
+
+class MinCount(AggregationPrimitive):
+    """Calculates the number of occurrences of the min value in a list
+
+    Examples:
+        >>> min_count = MinCount()
+        >>> min_count([1, 2, 5, 1, 5, 3, 5])
+        2
+    """
+    name = "min_count"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def min_count(array):
+            min_value = min(array)
+            count = list(array).count(min_value)
+            return count
+
+        return min_count
