@@ -41,7 +41,8 @@ from featuretools.primitives import (
     IsUnique,
     Kurtosis,
     MaxConsecutiveFalse,
-    MaxConsecutiveNegatives
+    MaxConsecutiveNegatives,
+    MaxConsecutivePositives
 )
 
 def test_AutoCorrelation():
@@ -248,3 +249,8 @@ def test_MaxConsecutiveFalse():
 def test_MaxConsecutiveNegatives():
     max_consecutive_negatives = MaxConsecutiveNegatives()
     assert max_consecutive_negatives([1.0, -1.4, -2.4, -5.4, 2.9, -4.3]) == 3
+
+
+def test_MaxConsecutivePositives():
+    max_consecutive_positives = MaxConsecutivePositives()
+    assert max_consecutive_positives([1.0, -1.4, 2.4, 5.4, 2.9, -4.3]) == 3

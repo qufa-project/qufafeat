@@ -1284,3 +1284,36 @@ class MaxConsecutiveNegatives(AggregationPrimitive):
             return max_count
 
         return max_consecutive_negatives
+
+
+class MaxConsecutivePositives(AggregationPrimitive):
+    """Determines the maximum number of consecutive positive values in the input
+
+    Examples:
+        >>> max_consecutive_positives = MaxConsecutivePositives()
+        >>> max_consecutive_positives([1.0, -1.4, 2.4, 5.4, 2.9, -4.3])
+        3
+    """
+    name = "max_consecutive_positives"
+    input_types = [Numeric]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_positives(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val > 0 and count == -1:
+                    count = 1
+                elif val > 0 and count > 0:
+                    count += 1
+                elif val <= 0:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_positives
