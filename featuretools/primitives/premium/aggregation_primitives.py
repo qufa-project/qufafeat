@@ -1317,3 +1317,36 @@ class MaxConsecutivePositives(AggregationPrimitive):
             return max_count
 
         return max_consecutive_positives
+
+
+class MaxConsecutiveTrue(AggregationPrimitive):
+    """Determines the maximum number of consecutive True values in the input
+
+    Examples:
+        >>> max_consecutive_true = MaxConsecutiveTrue()
+        >>> max_consecutive_true([True, False, True, True, True, False])
+        3
+    """
+    name = "max_consecutive_true"
+    input_types = [Boolean]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_true(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val == True and count == -1:
+                    count = 1
+                elif val == True and count > 0:
+                    count += 1
+                elif val == False:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_true
