@@ -1450,3 +1450,36 @@ class LessThanPrevious(TransformPrimitive):
             return pandas.Index(results)
 
         return less_than_previous
+
+
+class MeanCharactersPerWord(TransformPrimitive):
+    """Determines the mean number of characters per word.
+
+    Description:
+    Given list of strings, determine the mean number of characters per word in each string.
+    A word is defined as a series of any characters not separated by white space.
+    Punctuation is removed before counting.
+    If a string is empty or `NaN`, return `NaN`.
+
+    Examples:
+        >>> x = ['This is a test file', 'This is second line', 'third line $1,000']
+        >>> mean_characters_per_word = MeanCharactersPerWord()
+        >>> mean_characters_per_word(x).tolist()
+        [3.0, 4.0, 5.0]
+    """
+    name = "mean_characters_per_word"
+    input_types = [NaturalLanguage]
+    return_type = Numeric
+
+    def get_function(self):
+        def mean_characters_per_word(sentences):
+            count = []
+            for sen in sentences:
+                words = str(sen).split(" ")
+                length = 0
+                for word in words:
+                    length += len(word)
+                count.append(length/len(words))
+            return pandas.Index(count)
+
+        return mean_characters_per_word

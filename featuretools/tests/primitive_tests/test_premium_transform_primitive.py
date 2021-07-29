@@ -41,7 +41,8 @@ from featuretools.primitives import (
     IsWholeNumber,
     IsZero,
     Lag,
-    LessThanPrevious
+    LessThanPrevious,
+    MeanCharactersPerWord
 )
 
 
@@ -265,3 +266,9 @@ def test_Lag():
 def test_LessThanPrevious():
     less_than_previous = LessThanPrevious()
     assert less_than_previous([1, 2, 1, 4]).tolist() == [False, False, True, False]
+
+
+def test_MeanCharactersPerWord():
+    x = ['This is a test file', 'This is second line', 'third line $1,000']
+    mean_characters_per_word = MeanCharactersPerWord()
+    assert mean_characters_per_word(x).tolist() == [3.0, 4.0, 5.0]
