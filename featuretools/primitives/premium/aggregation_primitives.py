@@ -1218,3 +1218,36 @@ class Kurtosis(AggregationPrimitive):
             return scipy.stats.kurtosis(array, None, self.fisher, self.bias, self.nan_policy)
 
         return kurtosis
+
+
+class MaxConsecutiveFalse(AggregationPrimitive):
+    """Determines the maximum number of consecutive False values in the input
+
+    Examples:
+        >>> max_consecutive_false = MaxConsecutiveFalse()
+        >>> max_consecutive_false([True, False, False, True, True, False])
+        2
+    """
+    name = "max_consecutive_false"
+    input_types = [Boolean]
+    return_type = Numeric
+
+    def __init__(self, skipna = True):
+        self.skipna = skipna
+
+    def get_function(self):
+        def max_consecutive_false(array):
+            max_count = 0
+            count = -1
+            for val in array:
+                if val == False and count == -1:
+                    count = 1
+                elif val == False and count > 0:
+                    count += 1
+                elif val == True:
+                    max_count = max(max_count, count)
+                    count = -1
+            max_count = max(max_count, count)
+            return max_count
+
+        return max_consecutive_false

@@ -39,7 +39,8 @@ from featuretools.primitives import (
     IsMonotonicallyDecreasing,
     IsMonotonicallyIncreasing,
     IsUnique,
-    Kurtosis
+    Kurtosis,
+    MaxConsecutiveFalse
 )
 
 def test_AutoCorrelation():
@@ -236,3 +237,8 @@ def test_IsUnique():
 def test_Kurtosis():
     kurtosis = Kurtosis()
     assert kurtosis([1, 2, 3, 4, 5]) == -1.3
+
+
+def test_MaxConsecutiveFalse():
+    max_consecutive_false = MaxConsecutiveFalse()
+    assert max_consecutive_false([True, False, False, True, True, False]) == 2
