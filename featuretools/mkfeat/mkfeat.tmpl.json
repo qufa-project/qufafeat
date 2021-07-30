@@ -1,0 +1,9 @@
+{
+	"path_input": "data.csv",
+	"path_output": "res.csv",
+	"columns": [
+		{ "name": "username", "type": "string" },
+		{ "name": "age", "type": "number" }
+	],
+	"operator": [ "Absolute" ]
+}

@@ -4,12 +4,32 @@ import sys
 import os
 from os.path import dirname
 import logger
+import json
 
 
 def usage():
     print("""\
-Usage: mkfeat.py <jobid> <csv path> <result path>
+Usage: mkfeat.py <configuration in json>
 """)
+
+
+def load_conf(path_conf: str):
+    with open(sys.argv[1]) as f:
+        try:
+            conf = json.load(f)
+        except json.decoder.JSONDecodeError:
+            logger.error("configuration has wrong format")
+            exit(2)
+        if 'path_input' not in conf or 'path_output' not in conf:
+            logger.error("configuration does not have path_input or path_output")
+        if 'columns' not in conf:
+            logger.error("configuration has no column information")
+            exit(2)
+        return conf
+
+
+def handle_progress(prog: int):
+    print("\rprogress: {}%".format(prog), end='')
 
 
 if __name__ == "__main__":
@@ -19,20 +39,26 @@ if __name__ == "__main__":
     sys.path.insert(0, topdir)
     from featuretools.mkfeat.feat_extractor import FeatureExtractor
 
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 2:
         usage()
         exit(1)
 
-    if not os.path.isfile(sys.argv[2]):
-        logger.error("file not found: {}".format(sys.argv[2]))
+    if not os.path.isfile(sys.argv[1]):
+        logger.error("configuration file not found: {}".format(sys.argv[1]))
         exit(1)
-    if os.path.exists(sys.argv[3]):
-        logger.error("result path already exist: {}".format(sys.argv[3]))
+
+    conf = load_conf(sys.argv[1])
+
+    if not os.path.exists(conf['path_input']):
+        logger.error("input path does not exist: {}".format(conf['path_input']))
+        exit(1)
+
+    if os.path.exists(conf['path_output']):
+        logger.error("output path already exist: {}".format(conf['path_output']))
         exit(1)
 
     extractor = FeatureExtractor()
-    extractor.load(sys.argv[2])
-    extractor.extract_features(sys.argv[1])
-    extractor.save(sys.argv[3])
-
-    exit(0)
+    extractor.load(conf['path_input'], conf['columns'])
+    extractor.extract_features(handle_progress)
+    extractor.save(conf['path_output'])
+    print()
