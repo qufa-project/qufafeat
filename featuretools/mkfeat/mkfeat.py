@@ -5,6 +5,7 @@ import os
 from os.path import dirname
 import logger
 import json
+from error import Error
 
 
 def usage():
@@ -58,7 +59,10 @@ if __name__ == "__main__":
         exit(1)
 
     extractor = FeatureExtractor()
-    extractor.load(conf['path_input'], conf['columns'])
+    err = extractor.load(conf['path_input'], conf['columns'])
+    if err != Error.OK:
+        logger.error("load error: {}".format(err))
+        exit(2)
     extractor.extract_features(handle_progress)
     extractor.save(conf['path_output'])
     print()

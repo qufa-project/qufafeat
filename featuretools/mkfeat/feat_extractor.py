@@ -1,5 +1,7 @@
 import featuretools as ft
-from featuretools.mkfeat.qufa_ES import QufaES
+from qufa_ES import QufaES
+from columnspec import ColumnSpec
+from error import Error
 
 
 class FeatureExtractor:
@@ -15,19 +17,20 @@ class FeatureExtractor:
         self.ipc = None
         self.proghandler = None
 
-    def load(self, path: str, columns: object):
+    def load(self, path: str, columns) -> Error:
         """
         CSV형식의 테이블 데이터를 로딩
 
         Args:
-            path: CSV 형식의 데이터 테이블 입력 파일 경로. CSV는 헤더가 있거나 없을 수 있음. (추후 고려 필요)
             columns: 데이터 테이블의 컬럼들에 대한 정보. 서비스에 맞게 추후 개발 필요. 현재는 활용되고 있지 않으나, 추후 활용 필요
+            path: CSV 형식의 데이터 테이블 입력 파일 경로. CSV는 헤더가 있거나 없을 수 있음. (추후 고려 필요)
 
         Returns:
             현재는 특별한 값을 반환하지 않으나, 보강 필요
         """
         self.es = QufaES()
-        self.es.load_from_csv(path)
+        colspec = ColumnSpec(columns)
+        return self.es.load_from_csv(path, colspec)
 
     def _progress_report(self, update, progress_percent, time_elapsed):
         prog = int(progress_percent)
