@@ -14,5 +14,5 @@
                 { "name": "store_and_fwd_flag", "type": "bool" },
                 { "name": "trip_duration", "type": "number" }
 	],
-	"operator": [ "Absolute" ]
+	"operators": [ "Absolute" ]
 }

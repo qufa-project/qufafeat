@@ -1,6 +1,7 @@
 import featuretools as ft
 from qufa_ES import QufaES
 from columnspec import ColumnSpec
+from opmgr import OperatorManager
 from error import Error
 
 
@@ -39,11 +40,12 @@ class FeatureExtractor:
         if self.proghandler is not None:
             self.proghandler(prog)
 
-    def extract_features(self, proghandler: callable):
+    def extract_features(self, operators, proghandler: callable):
         """
         특징 추출 작업 시작. 데이터 크기 및 operator 개수에 따라 수십분 이상의 시간이 소요될 수 있음
 
         Args:
+            operators: 특징 추출시 적용하고자 하는 특징 연산자
             proghandler: 특징 추출 작업시 진행율을 전달 받는 callback 함수. proghandler(prog: int) 형태. 0에서 100사이의 값으로
                 작업이 진행될 때 마다 증가. 100의 경우 작업 완료를 의미함
 
@@ -51,8 +53,11 @@ class FeatureExtractor:
             현재로서는 특정한 반환값 없음. 추후 필요시 반환값 혹은 exception을 발생시킬 수 있음
         """
 
+        opmgr = OperatorManager(operators)
         self.proghandler = proghandler
         self.feature_matrix, self.features = ft.dfs(entityset=self.es, target_entity="main",
+                                                    trans_primitives=opmgr.get_transform_operators(),
+                                                    agg_primitives=opmgr.get_aggregation_operators(),
                                                     progress_callback=self._progress_report)
         proghandler(100)
 
