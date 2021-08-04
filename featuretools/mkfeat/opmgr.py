@@ -8,10 +8,10 @@ class OperatorManager:
     def __init__(self, operators):
         self.operators = set(operators)
         self.transforms = {
-            "Absolute"
+            "absolute", "day", "haversine", "month", "num_characters", "num_words", "weekday", "year"
         }
         self.aggregations = {
-            "Sum"
+            "count", "max", "mode", "num_unique", "percent_true", "skew",  "std", "sum"
         }
 
     def get_transform_operators(self):
