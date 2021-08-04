@@ -7,4 +7,6 @@ class Error(Enum):
     """
     OK = 0
     ERR_GENERAL = -1
-    ERR_COLUMN_COUNT_MISMATCH = -2
+    ERR_INVALID_ARG = -2
+    ERR_COLUMN_COUNT_MISMATCH = -3
+    ERR_ONGOING = -4

@@ -2,6 +2,7 @@ import featuretools as ft
 from qufa_ES import QufaES
 from columnspec import ColumnSpec
 from opmgr import OperatorManager
+from feathelper import FeatureHelper
 from error import Error
 
 
@@ -14,7 +15,7 @@ class FeatureExtractor:
         self.es = None
 
         self.feature_matrix = None
-        self.features = None
+        self.feature_helper = None
         self.ipc = None
         self.proghandler = None
 
@@ -55,10 +56,12 @@ class FeatureExtractor:
 
         opmgr = OperatorManager(operators)
         self.proghandler = proghandler
-        self.feature_matrix, self.features = ft.dfs(entityset=self.es, target_entity=self.es.target_entity_name,
-                                                    trans_primitives=opmgr.get_transform_operators(),
-                                                    agg_primitives=opmgr.get_aggregation_operators(),
-                                                    progress_callback=self._progress_report, max_depth=3)
+        self.feature_matrix, features = ft.dfs(entityset=self.es, target_entity=self.es.target_entity_name,
+                                               trans_primitives=opmgr.get_transform_operators(),
+                                               agg_primitives=opmgr.get_aggregation_operators(),
+                                               progress_callback=self._progress_report, max_depth=3)
+        self.feature_helper = FeatureHelper(features)
+
         proghandler(100)
 
     def save(self, path):
@@ -72,3 +75,23 @@ class FeatureExtractor:
 
         """
         self.feature_matrix.to_csv(path)
+
+    def get_feature_info(self):
+        """
+        추출 완료된 특징들에 대한 정보 반환. 현재는 각 특징에 대한 특징명과 타입을 문자열로 반환함. 파생특징에 대한 이름으로 부터 어떠한 특징과 연산자에 기반하여
+        생성되었는지 확인이 가능함.
+
+        Returns:
+            list[list]:
+                성공적으로 수행된 경우 반환되는 값. 각 배열 항목은 추출된 특징의 컬럼명과 형식에 대한 문자열임. 다음과 같은 형식.
+                [ [ "colname1", "number" ], [ "colname2", "string" ] .. ]
+            :class:`.Error`:
+                오류가 발생한 경우 반환됨. 반환 가능한 오류값은
+                - ERR_GENERAL: 알수 없는 오류. 특징 추출이 진행되지 않는 경우도 해당함
+                - ERR_ONGOING: 특징 추출 작업이 진행중인 경우
+        """
+        if self.proghandler is None:
+            return Error.ERR_GENERAL
+        if self.feature_matrix is None:
+            return Error.ERR_ONGOING
+        return self.feature_helper.to_array()

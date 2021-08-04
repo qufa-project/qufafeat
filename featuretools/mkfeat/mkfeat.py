@@ -64,5 +64,7 @@ if __name__ == "__main__":
         logger.error("load error: {}".format(err))
         exit(2)
     extractor.extract_features(conf['operators'], handle_progress)
-    extractor.save(conf['path_output'])
     print()
+
+    extractor.save(conf['path_output'])
+    print(extractor.get_feature_info())
