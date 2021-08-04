@@ -55,10 +55,10 @@ class FeatureExtractor:
 
         opmgr = OperatorManager(operators)
         self.proghandler = proghandler
-        self.feature_matrix, self.features = ft.dfs(entityset=self.es, target_entity="main",
+        self.feature_matrix, self.features = ft.dfs(entityset=self.es, target_entity=self.es.target_entity_name,
                                                     trans_primitives=opmgr.get_transform_operators(),
                                                     agg_primitives=opmgr.get_aggregation_operators(),
-                                                    progress_callback=self._progress_report)
+                                                    progress_callback=self._progress_report, max_depth=3)
         proghandler(100)
 
     def save(self, path):
