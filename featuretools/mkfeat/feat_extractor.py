@@ -17,8 +17,8 @@ class FeatureExtractor:
 
         self.feature_matrix = None
         self.feature_helper = None
-        self.ipc = None
         self.proghandler = None
+        self._prog = None
 
     def load(self, path: str, columns) -> Error:
         """
@@ -41,8 +41,9 @@ class FeatureExtractor:
             prog = 99
         if self.proghandler is not None:
             self.proghandler(prog)
+        self._prog = prog
 
-    def extract_features(self, operators, proghandler: callable):
+    def extract_features(self, operators, proghandler: callable = None):
         """
         특징 추출 작업 시작. 데이터 크기 및 operator 개수에 따라 수십분 이상의 시간이 소요될 수 있음
 
@@ -63,7 +64,18 @@ class FeatureExtractor:
                                                progress_callback=self._progress_report, max_depth=3)
         self.feature_helper = FeatureHelper(features)
 
-        proghandler(100)
+        if proghandler is None:
+            proghandler(100)
+        self._prog = 100
+
+    def get_progress(self):
+        """
+            progress handler를 등록하지 않고, Polling 방식으로 진행율을 얻는 경우 활용 가능(웹서비스에서는 이 방식이 편리할 듯)
+
+        Returns:
+            int: 진행율 정보
+        """
+        return self._prog
 
     def save(self, path):
         """
