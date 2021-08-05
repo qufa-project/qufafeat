@@ -2,8 +2,8 @@ from featuretools.entityset import EntitySet
 import autonormalize as an
 import pandas as pd
 
-from columnspec import ColumnSpec
-from error import Error
+from .columnspec import ColumnSpec
+from .error import Error
 
 
 # CSV데이터가 header를 포함하는지 여부. 데이터 연동 서비스측에 따라 결정됨. 현재 구현은 2가지 경우를 모두 감안하기로 함

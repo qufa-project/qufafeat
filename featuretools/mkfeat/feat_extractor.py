@@ -1,9 +1,10 @@
 import featuretools as ft
-from qufa_ES import QufaES
-from columnspec import ColumnSpec
-from opmgr import OperatorManager
-from feathelper import FeatureHelper
-from error import Error
+
+from .qufa_ES import QufaES
+from .columnspec import ColumnSpec
+from .opmgr import OperatorManager
+from .feathelper import FeatureHelper
+from .error import Error
 
 
 class FeatureExtractor:

@@ -5,7 +5,6 @@ import os
 from os.path import dirname
 import logger
 import json
-from error import Error
 
 
 def usage():
@@ -39,6 +38,7 @@ if __name__ == "__main__":
     topdir = dirname(dirname(dirname(__file__)))
     sys.path.insert(0, topdir)
     from featuretools.mkfeat.feat_extractor import FeatureExtractor
+    from featuretools.mkfeat.error import Error
 
     if len(sys.argv) < 2:
         usage()
