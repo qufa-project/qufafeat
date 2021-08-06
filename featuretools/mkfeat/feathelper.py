@@ -5,8 +5,11 @@ from featuretools.variable_types.variable import (
 
 
 _typestr_to_mkfeat = {
-    "numeric": "numeric",
-    "date": "date"
+    "date": "date",
+    "datetime": "date",
+    "numeric": "number",
+    "boolean": "bool",
+    "categorical": "class",
 }
 
 
