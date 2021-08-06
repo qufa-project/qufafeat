@@ -5,8 +5,31 @@ from featuretools.variable_types.variable import (
 
 
 _typestr_to_mkfeat = {
+    "boolean": "boolean",
+    "categorical": "category",
+    "country_code": "string",
+    "date": "date",
+    "date_of_birth": "datetime",
+    "datetime": "datetime",
+    "datetime_time_index": "datetime",
+    "discrete": "category",
+    "email_address": "string",
+    "file_path": "string",
+    "full_name": "string",
+    "id": "numeric",
+    "index": "numeric",
+    "ip_address": "string",
+    "lat_long": "tuple",
+    "natural_language": "string",
     "numeric": "numeric",
-    "date": "date"
+    "numeric_time_index": "numeric",
+    "ordinal": "category",
+    "phone_number": "string",
+    "sub_region_code": "string",
+    "time_index": "datetime",
+    "timedelta": "timedelta",
+    "url": "string",
+    "zip_code": "string"
 }
 
 
