@@ -64,7 +64,7 @@ class FeatureExtractor:
                                                progress_callback=self._progress_report, max_depth=3)
         self.feature_helper = FeatureHelper(features)
 
-        if proghandler is None:
+        if proghandler is not None:
             proghandler(100)
         self._prog = 100
 
