@@ -20,8 +20,9 @@ class QufaES(EntitySet):
         if len(colnames) != self._guess_n_columns(path):
             return Error.ERR_COLUMN_COUNT_MISMATCH
         skiprows = 1 if csv_has_header else None
-        data = pd.read_csv(path, header=None, names=colnames, skiprows=skiprows)
-        es = an.auto_entityset(data, index=colspec.get_key_colname(), accuracy=1, name="main")
+        data = pd.read_csv(path, header=None, names=colnames, converters=colspec.get_converters(), skiprows=skiprows,
+                           true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'])
+        es = an.auto_entityset(data, index=colspec.get_key_colname(), accuracy=0.98, name="main")
         self.entity_dict = es.entity_dict
         self.relationships = es.relationships
         self.reset_data_description()

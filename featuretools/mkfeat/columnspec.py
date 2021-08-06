@@ -1,3 +1,12 @@
+import pandas as pd
+
+
+_mkfeat_typestr_to_converter = {
+    "number": pd.to_numeric,
+    "date": pd.to_datetime
+}
+
+
 class ColumnSpec:
     """
     컬럼명이나 유형과 관련된 정보를 처리하는 목적의 클래스. 현재는 컬럼명에 대한 정보를 처리하는 기능만 구현됨
@@ -17,6 +26,14 @@ class ColumnSpec:
             colnames.append(colinfo['name'])
         return colnames
 
+    def get_converters(self):
+        converters = {}
+        for colinfo in self.columns:
+            converter = self._get_converter_from_strtype(colinfo['type'])
+            if converter is not None:
+                converters[colinfo['name']] = converter
+        return converters
+
     def get_key_colname(self):
         """
         특징 추출시 id로 지정가능한 컬럼명 반환. key로 지정된 column명이 없는 경우 첫번째 컬럼명 반환
@@ -28,3 +45,9 @@ class ColumnSpec:
             if 'key' in colinfo and colinfo['key']:
                 return colinfo['name']
         return self.columns[0]['name']
+
+    @staticmethod
+    def _get_converter_from_strtype(typestr):
+        if typestr in _mkfeat_typestr_to_converter:
+            return _mkfeat_typestr_to_converter[typestr]
+        return None
