@@ -8,8 +8,12 @@ import logger
 
 def usage():
     print("""\
-Usage: mkimpt.py <jobid> <data path> <label path>
+Usage: mkimpt.py <data path> <label path>
 """)
+
+
+def _handle_progress(prog: int):
+    print("\rprogress: {}%".format(prog), end='')
 
 
 if __name__ == "__main__":
@@ -19,20 +23,20 @@ if __name__ == "__main__":
     sys.path.insert(0, topdir)
     from featuretools.mkfeat.feat_importance import FeatureImportance
 
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         usage()
         exit(1)
 
-    if not os.path.isfile(sys.argv[2]):
-        logger.error("data file not found: {}".format(sys.argv[2]))
+    if not os.path.isfile(sys.argv[1]):
+        logger.error("data file not found: {}".format(sys.argv[1]))
         exit(1)
-    if not os.path.exists(sys.argv[3]):
-        logger.error("label file not found: {}".format(sys.argv[3]))
+    if not os.path.exists(sys.argv[2]):
+        logger.error("label file not found: {}".format(sys.argv[2]))
         exit(1)
 
     impt = FeatureImportance()
-    impt.load(sys.argv[2], sys.argv[3])
-    impt.analyze(sys.argv[1])
+    impt.load(sys.argv[1], sys.argv[2])
+    impt.analyze(_handle_progress)
     print(impt.get_importance())
 
     exit(0)
