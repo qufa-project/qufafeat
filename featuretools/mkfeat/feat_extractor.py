@@ -103,7 +103,7 @@ class FeatureExtractor:
                 - ERR_GENERAL: 알수 없는 오류. 특징 추출이 진행되지 않는 경우도 해당함
                 - ERR_ONGOING: 특징 추출 작업이 진행중인 경우
         """
-        if self.proghandler is None:
+        if self._prog is None:
             return Error.ERR_GENERAL
         if self.feature_matrix is None:
             return Error.ERR_ONGOING
