@@ -10,3 +10,4 @@ class Error(Enum):
     ERR_INVALID_ARG = -2
     ERR_COLUMN_COUNT_MISMATCH = -3
     ERR_ONGOING = -4
+    ERR_DATA_NOT_FOUND = -5

@@ -1,4 +1,5 @@
 import featuretools as ft
+import os.path
 
 from .qufa_ES import QufaES
 from .columnspec import ColumnSpec
@@ -29,8 +30,11 @@ class FeatureExtractor:
             path: CSV 형식의 데이터 테이블 입력 파일 경로. CSV는 헤더가 있거나 없을 수 있음. (추후 고려 필요)
 
         Returns:
-            현재는 특별한 값을 반환하지 않으나, 보강 필요
+            Error.OK : 성공적으로 로딩한 경우
+            Error.ERR_DATA_NOT_FOUND: path에 대한 데이터 경로가 존재하지 않음
         """
+        if not os.path.isfile(path):
+            return Error.ERR_DATA_NOT_FOUND
         self.es = QufaES()
         colspec = ColumnSpec(columns)
         return self.es.load_from_csv(path, colspec)
