@@ -61,4 +61,12 @@ class FeatureImportance:
             proghandler(100)
 
     def get_importance(self):
-        return self.model.get_fscore()
+        fscores = self.model.get_fscore()
+        fscore_sum = 0
+        for i in range(len(self.data.columns)):
+            fscore_sum += fscores['f' + str(i)]
+        importances = []
+        for i in range(len(self.data.columns)):
+            importances.append(fscores['f' + str(i)] / fscore_sum)
+
+        return importances
