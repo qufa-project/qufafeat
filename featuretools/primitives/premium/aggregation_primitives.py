@@ -9,7 +9,6 @@ import scipy
 from scipy.signal import find_peaks
 from haversine import haversine
 from collections import Counter
-from pandas import Series
 import math
 import statistics
 
@@ -135,7 +134,7 @@ class NMostCommonFrequency(AggregationPrimitive):
             not_nan_list = []
             nan_cnt = 0
             for value in values:
-                if not np.isnan(value):
+                if value:
                     not_nan_list.append(value)
                 else:
                     nan_cnt += 1
@@ -148,7 +147,7 @@ class NMostCommonFrequency(AggregationPrimitive):
                 result = freq_list[:self.n]
             else:
                 result = freq_list + [np.nan] * (self.n-len(freq_list))
-            return Series(result)
+            return result
 
         return most_common_freq
 
