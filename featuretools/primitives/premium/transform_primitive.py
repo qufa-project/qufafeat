@@ -586,8 +586,10 @@ class SameAsPrevious(TransformPrimitive):
 
     def get_function(self):
         def same_as_pre(values):
-            fill_values = values.interpolate(method=self.fill_method, limit=self.limit)
+            fill_values = values.fillna(method=self.fill_method, limit=self.limit)
             result = [False]
+            if type(fill_values) is Series:
+                fill_values = fill_values.tolist()
             for i in range(1, len(fill_values)):
                 if fill_values[i-1] == fill_values[i]:
                     result.append(True)
