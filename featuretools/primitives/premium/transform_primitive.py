@@ -689,11 +689,13 @@ class ScorePercentile(TransformPrimitive):
     return_type = Numeric
     description_template = "the percentile of {} against scores"
 
-    def __init__(self, scores):
+    def __init__(self, scores=[]):
         self.scores = scores
 
     def get_function(self):
         def score_percent(values):
+            if len(self.scores) == 0:
+                self.scores = values
             return np.array([stats.percentileofscore(self.scores, value) for value in values])
 
         return score_percent
