@@ -667,6 +667,11 @@ class SavgolFilter(TransformPrimitive):
 
     def get_function(self):
         def sav_filter(values):
+            if self.mode == "interp" and self.window_length > len(values):
+                self.window_length = len(values)
+                if self.window_length % 2 == 0:
+                    self.window_length -= 1
+                self.polyorder = self.window_length // 2
             return savgol_filter(values, self.window_length, self.polyorder, self.deriv, self.delta, self.axis, self.mode, self.cval)
 
         return sav_filter
