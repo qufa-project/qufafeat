@@ -536,7 +536,12 @@ class NumZeroCrossings(AggregationPrimitive):
             for value in values:
                 if not np.isnan(value):
                     not_nan_list.append(value)
-            return (np.diff(np.sign(not_nan_list)) != 0).sum()
+            sum = 0
+            for i in range(1, len(not_nan_list)):
+                if (not_nan_list[i - 1] < 0 and not_nan_list[i] > 0) or (
+                        not_nan_list[i - 1] > 0 and not_nan_list[i] < 0):
+                    sum += 1
+            return sum
 
         return zero_crossings
 
