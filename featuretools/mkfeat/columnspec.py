@@ -76,6 +76,12 @@ class ColumnSpec:
                 return colinfo['name']
         return self.columns[0]['name']
 
+    def get_label_colname(self):
+        for colinfo in self.columns:
+            if 'label' in colinfo and colinfo['label']:
+                return colinfo['name']
+        return None
+
     @staticmethod
     def _get_converter_from_strtype(typestr):
         if typestr in _mkfeat_typestr_to_converter:

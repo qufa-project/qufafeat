@@ -70,6 +70,9 @@ class FeatureExtractor:
                                                agg_primitives=opmgr.get_aggregation_operators(),
                                                progress_callback=self._progress_report, max_depth=3)
         self.feature_helper = FeatureHelper(features)
+        df_label = self.es.get_df_label()
+        if df_label is not None:
+            self.feature_matrix = self.feature_matrix.merge(df_label, how='left', on=df_label.columns[0])
 
         if proghandler is not None:
             proghandler(100)
