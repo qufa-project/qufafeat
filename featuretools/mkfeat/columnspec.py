@@ -1,5 +1,7 @@
 import pandas as pd
 
+from .error import Error
+
 
 _mkfeat_typestr_to_converter = {
     "number": pd.to_numeric,
@@ -13,6 +15,34 @@ class ColumnSpec:
     """
     def __init__(self, columns):
         self.columns = columns
+
+    def validate(self):
+        """
+        Column 정의에 대한 검증. 모든 컬럼에 name, type이 정의되어 있는지, key가 전체 컬럼에 1개 정의, label이 정의된 컬럼이 1개
+        혹은 정의되지 않았는지를 확인함
+        Returns:
+            :class:.Error: column 정의가 문제 없는 경우 OK반환. 그렇지 않으면 해당하는 오류값 반환.
+        """
+        has_key = False
+        has_label = False
+        for colinfo in self.columns:
+            if 'name' not in colinfo or 'type' not in colinfo:
+                return Error.ERR_COLUMN_HAS_NO_NAME_OR_TYPE
+            if 'key' in colinfo:
+                if colinfo['key']:
+                    if has_key:
+                        return Error.ERR_COLUMN_MULTI_KEY
+                    if 'label' in colinfo and colinfo['label']:
+                        return Error.ERR_COLUMN_KEY_AND_LABEL
+                    has_key = True
+            if 'label' in colinfo:
+                if colinfo['label']:
+                    if has_label:
+                        return Error.ERR_COLUMN_MULTI_LABEL
+                    has_label = True
+        if not has_key:
+            return Error.ERR_COLUMN_NO_KEY
+        return Error.OK
 
     def get_colnames(self):
         """

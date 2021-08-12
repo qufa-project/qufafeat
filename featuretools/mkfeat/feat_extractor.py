@@ -35,8 +35,11 @@ class FeatureExtractor:
         """
         if not os.path.isfile(path):
             return Error.ERR_DATA_NOT_FOUND
-        self.es = QufaES()
         colspec = ColumnSpec(columns)
+        err = colspec.validate()
+        if err != Error.OK:
+            return err
+        self.es = QufaES()
         return self.es.load_from_csv(path, colspec)
 
     def _progress_report(self, update, progress_percent, time_elapsed):
