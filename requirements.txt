@@ -14,3 +14,4 @@ phone_iso3166
 nltk
 haversine
 autonormalize
+xgboost

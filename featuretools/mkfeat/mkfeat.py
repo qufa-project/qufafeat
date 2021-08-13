@@ -20,10 +20,14 @@ def load_conf(path_conf: str):
         except json.decoder.JSONDecodeError:
             logger.error("configuration has wrong format")
             exit(2)
-        if 'path_input' not in conf or 'path_output' not in conf:
-            logger.error("configuration does not have path_input or path_output")
-        if 'columns' not in conf:
-            logger.error("configuration has no column information")
+        if 'data' not in conf:
+            logger.error("configuration does not have data")
+            exit(2)
+        if 'uri' not in conf['data']:
+            logger.error("configuration does not have uri in data")
+            exit(2)
+        if 'columns' not in conf['data']:
+            logger.error("configuration does not have columns in data")
             exit(2)
         return conf
 
@@ -50,21 +54,23 @@ if __name__ == "__main__":
 
     conf = load_conf(sys.argv[1])
 
-    if not os.path.exists(conf['path_input']):
-        logger.error("input path does not exist: {}".format(conf['path_input']))
-        exit(1)
-
-    if os.path.exists(conf['path_output']):
-        logger.error("output path already exist: {}".format(conf['path_output']))
+    path_input = conf['data']['uri']
+    columns = conf['data']['columns']
+    if not os.path.exists(path_input):
+        logger.error("input path does not exist: {}".format(path_input))
         exit(1)
 
     extractor = FeatureExtractor()
-    err = extractor.load(conf['path_input'], conf['columns'])
+    err = extractor.load(path_input, columns)
     if err != Error.OK:
         logger.error("load error: {}".format(err))
         exit(2)
     extractor.extract_features(conf['operators'], handle_progress)
     print()
 
-    extractor.save(conf['path_output'])
+    if 'path_output' in conf:
+        if os.path.exists(conf['path_output']):
+            logger.warn("output path already exist: {}".format(conf['path_output']))
+        else:
+            extractor.save(conf['path_output'])
     print(extractor.get_feature_info())
