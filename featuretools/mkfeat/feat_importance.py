@@ -18,7 +18,7 @@ class TrainCallback(xgb.callback.TrainingCallback):
         if prog >= 100:
             prog = 99
         if self.proghandler:
-            self.proghandler(prog)
+            return self.proghandler(prog)
         return False
 
 

@@ -41,6 +41,7 @@ def load_conf(path_conf: str):
 
 def _handle_progress(prog: int):
     print("\rprogress: {}%".format(prog), end='')
+    return False
 
 
 if __name__ == "__main__":
