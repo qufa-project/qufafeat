@@ -44,15 +44,21 @@ class ColumnSpec:
             return Error.ERR_COLUMN_NO_KEY
         return Error.OK
 
-    def get_colnames(self):
+    def get_colnames(self, label_only: bool = False, exclude_label: bool = False):
         """
         컬럼명 배열을 반환. pandas의 read_csv() 함수 전달 인자를 쉽게 생성하기 위함
 
+        Args:
+            label_only (bool): True의 경우 label에 대한 column명 만을 추출
         Returns:
             컬럼명으로 구성된 배열
         """
         colnames = []
         for colinfo in self.columns:
+            if label_only and ('label' not in colinfo or not colinfo['label']):
+                continue
+            if exclude_label and 'label' in colinfo and colinfo['label']:
+                continue
             colnames.append(colinfo['name'])
         return colnames
 

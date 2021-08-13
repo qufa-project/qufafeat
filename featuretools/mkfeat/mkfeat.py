@@ -14,7 +14,7 @@ Usage: mkfeat.py <configuration in json>
 
 
 def load_conf(path_conf: str):
-    with open(sys.argv[1]) as f:
+    with open(path_conf) as f:
         try:
             conf = json.load(f)
         except json.decoder.JSONDecodeError:

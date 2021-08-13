@@ -4,6 +4,8 @@ import xgboost as xgb
 from sklearn.model_selection import train_test_split
 
 from .error import Error
+from .columnspec import ColumnSpec
+from .qufa_csv import QufaCsv
 
 
 class TrainCallback(xgb.callback.TrainingCallback):
@@ -27,14 +29,38 @@ class FeatureImportance:
         self.model = None
         self.n_epochs = 300
 
-    def load(self, path_data: str, path_label: str):
+    def load(self, path_data: str, columns_data: dict, path_label: str, columns_label: dict) -> Error:
+        if path_data is None or columns_data is None:
+            return Error.ERR_INVALID_ARG
         if not os.path.isfile(path_data):
             return Error.ERR_DATA_NOT_FOUND
-        if not os.path.isfile(path_label):
-            return Error.ERR_LABEL_NOT_FOUND
+        if path_label is not None:
+            if columns_label is None:
+                return Error.ERR_INVALID_ARG
+            if not os.path.isfile(path_label):
+                return Error.ERR_LABEL_NOT_FOUND
 
-        self.data = pd.read_csv(path_data)
-        self.label = pd.read_csv(path_label)
+        colspec_data = ColumnSpec(columns_data)
+        if path_label is None:
+            if colspec_data.get_label_colname() is None:
+                return Error.ERR_LABEL_NOT_FOUND
+
+        csv_data = QufaCsv(path_data, colspec_data)
+        exclude_label = True if path_label is None else False
+        data = csv_data.load(exclude_label=exclude_label)
+        if isinstance(data, Error):
+            return data
+        self.data = data
+
+        if path_label is None:
+            label = csv_data.load(label_only=True)
+        else:
+            colspec_label = ColumnSpec(columns_label)
+            csv_label = QufaCsv(path_label, colspec_label)
+            label = csv_label.load()
+        if isinstance(label, Error):
+            return label
+        self.label = label
         return Error.OK
 
     def analyze(self, proghandler: callable = None):
@@ -64,9 +90,15 @@ class FeatureImportance:
         fscores = self.model.get_fscore()
         fscore_sum = 0
         for i in range(len(self.data.columns)):
-            fscore_sum += fscores['f' + str(i)]
+            colname = 'f' + str(i)
+            if colname in fscores:
+                fscore_sum += fscores[colname]
         importances = []
         for i in range(len(self.data.columns)):
-            importances.append(fscores['f' + str(i)] / fscore_sum)
+            colname = 'f' + str(i)
+            if colname in fscores:
+                importances.append(fscores[colname] / fscore_sum)
+            else:
+                importances.append(0.0)
 
         return importances

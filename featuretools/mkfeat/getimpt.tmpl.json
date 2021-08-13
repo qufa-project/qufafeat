@@ -1,0 +1,10 @@
+{
+	"data": {
+		"uri": "data.csv",
+		"columns": [
+			{ "name": "refcnt", "type": "number" },
+			{ "name": "grade", ,"type": "number" },
+			{ "name": "is_pass", "type": "bool", "label": true }
+		]
+	}
+}

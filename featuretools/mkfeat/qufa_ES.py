@@ -17,6 +17,8 @@ class QufaES(EntitySet):
     def load_from_csv(self, path, colspec: ColumnSpec) -> Error:
         csv = QufaCsv(path, colspec)
         data = csv.load()
+        if isinstance(data, Error):
+            return data
 
         colname_key = colspec.get_key_colname()
         colname_label = colspec.get_label_colname()
