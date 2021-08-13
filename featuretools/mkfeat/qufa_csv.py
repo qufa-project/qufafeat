@@ -21,9 +21,14 @@ class QufaCsv:
             return Error.ERR_COLUMN_COUNT_MISMATCH
         usecols = self._colspec.get_usecols(label_only=label_only, exclude_label=exclude_label,
                                             numeric_only=numeric_only)
-        data = pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
-                           skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
-                           true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'])
+
+        try:
+            data = pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
+                                skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
+                                true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'])
+        except ValueError:
+            return Error.ERR_COLUMN_TYPE
+
         return data
 
     def _guess_n_columns(self):
