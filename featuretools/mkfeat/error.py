@@ -17,3 +17,4 @@ class Error(Enum):
     ERR_COLUMN_MULTI_LABEL = -9
     ERR_COLUMN_NO_KEY = -10
     ERR_COLUMN_KEY_AND_LABEL = -11
+    ERR_STOPPED = -12
