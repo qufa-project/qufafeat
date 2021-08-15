@@ -8,6 +8,10 @@ _mkfeat_typestr_to_converter = {
     "date": pd.to_datetime
 }
 
+_mkfeat_typestr_to_dtype = {
+    "bool": bool
+}
+
 
 class ColumnSpec:
     """
@@ -44,12 +48,25 @@ class ColumnSpec:
             return Error.ERR_COLUMN_NO_KEY
         return Error.OK
 
-    def get_colnames(self, label_only: bool = False, exclude_label: bool = False):
+    def get_colnames(self):
         """
         컬럼명 배열을 반환. pandas의 read_csv() 함수 전달 인자를 쉽게 생성하기 위함
 
+        Returns:
+            컬럼명으로 구성된 배열
+        """
+        colnames = []
+        for colinfo in self.columns:
+            colnames.append(colinfo['name'])
+        return colnames
+
+    def get_usecols(self, label_only: bool = False, exclude_label: bool = False):
+        """
+        컬럼명 배열을 반환. pandas의 read_csv()의 usecols 파라미터 전달용 함수
+
         Args:
             label_only (bool): True의 경우 label에 대한 column명 만을 추출
+            exclude_label (bool): True의 경우 label 컬럼을 제거하여 column명 목록 생성
         Returns:
             컬럼명으로 구성된 배열
         """
@@ -61,6 +78,14 @@ class ColumnSpec:
                 continue
             colnames.append(colinfo['name'])
         return colnames
+
+    def get_dtypes(self):
+        dtypes = {}
+        for colinfo in self.columns:
+            dtype = self._get_dtype_from_strtype(colinfo['type'])
+            if dtype is not None:
+                dtypes[colinfo['name']] = dtype
+        return dtypes
 
     def get_converters(self):
         converters = {}
@@ -86,6 +111,12 @@ class ColumnSpec:
         for colinfo in self.columns:
             if 'label' in colinfo and colinfo['label']:
                 return colinfo['name']
+        return None
+
+    @staticmethod
+    def _get_dtype_from_strtype(typestr):
+        if typestr in _mkfeat_typestr_to_dtype:
+            return _mkfeat_typestr_to_dtype[typestr]
         return None
 
     @staticmethod

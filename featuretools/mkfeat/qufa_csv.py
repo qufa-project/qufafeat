@@ -16,20 +16,15 @@ class QufaCsv:
 
     def load(self, label_only: bool = False, exclude_label: bool = False):
         usecols = None
-        colnames = self._colspec.get_colnames(label_only, exclude_label)
-        if label_only:
-            usecols = colnames
-        else:
-            if len(colnames) != self._guess_n_columns(exclude_label):
-                return Error.ERR_COLUMN_COUNT_MISMATCH
+        colnames = self._colspec.get_colnames()
+        if len(colnames) != self._guess_n_columns():
+            return Error.ERR_COLUMN_COUNT_MISMATCH
+        usecols = self._colspec.get_usecols(label_only=label_only, exclude_label=exclude_label)
         data = pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
-                           skiprows=self._skiprows, usecols=usecols,
+                           skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
                            true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'])
         return data
 
-    def _guess_n_columns(self, exclude_label):
+    def _guess_n_columns(self):
         data = pd.read_csv(self._path, header=0, skiprows=self._skiprows, nrows=1)
-        ncols = len(data.columns)
-        if exclude_label and self._colspec.get_label_colname():
-            ncols -= 1
-        return ncols
+        return len(data.columns)
