@@ -73,6 +73,7 @@ class FeatureExtractor:
         df_label = self.es.get_df_label()
         if df_label is not None:
             self.feature_matrix = self.feature_matrix.merge(df_label, how='left', on=df_label.columns[0])
+            self.feature_matrix.set_index(df_label.columns[0], inplace=True)
 
         if proghandler is not None:
             proghandler(100)
