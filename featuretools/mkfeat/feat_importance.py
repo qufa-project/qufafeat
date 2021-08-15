@@ -28,6 +28,7 @@ class FeatureImportance:
         self.label = None
         self.model = None
         self.n_epochs = 300
+        self._colspec_data: ColumnSpec = None
 
     def load(self, path_data: str, columns_data: dict, path_label: str, columns_label: dict) -> Error:
         if path_data is None or columns_data is None:
@@ -40,14 +41,14 @@ class FeatureImportance:
             if not os.path.isfile(path_label):
                 return Error.ERR_LABEL_NOT_FOUND
 
-        colspec_data = ColumnSpec(columns_data)
+        self._colspec_data = colspec_data = ColumnSpec(columns_data)
         if path_label is None:
             if colspec_data.get_label_colname() is None:
                 return Error.ERR_LABEL_NOT_FOUND
 
         csv_data = QufaCsv(path_data, colspec_data)
         exclude_label = True if path_label is None else False
-        data = csv_data.load(exclude_label=exclude_label)
+        data = csv_data.load(exclude_label=exclude_label, numeric_only=True)
         if isinstance(data, Error):
             return data
         self.data = data
@@ -100,5 +101,9 @@ class FeatureImportance:
                 importances.append(fscores[colname] / fscore_sum)
             else:
                 importances.append(0.0)
-
+        idx = 0
+        for is_numeric in self._colspec_data.get_is_numerics():
+            if not is_numeric:
+                importances.insert(idx, 0)
+            idx += 1
         return importances

@@ -14,12 +14,13 @@ class QufaCsv:
         self._colspec = colspec
         self._skiprows = 1 if csv_has_header else None
 
-    def load(self, label_only: bool = False, exclude_label: bool = False):
+    def load(self, label_only: bool = False, exclude_label: bool = False, numeric_only: bool = False):
         usecols = None
         colnames = self._colspec.get_colnames()
         if len(colnames) != self._guess_n_columns():
             return Error.ERR_COLUMN_COUNT_MISMATCH
-        usecols = self._colspec.get_usecols(label_only=label_only, exclude_label=exclude_label)
+        usecols = self._colspec.get_usecols(label_only=label_only, exclude_label=exclude_label,
+                                            numeric_only=numeric_only)
         data = pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
                            skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
                            true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'])

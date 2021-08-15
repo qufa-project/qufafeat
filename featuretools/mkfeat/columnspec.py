@@ -60,11 +60,12 @@ class ColumnSpec:
             colnames.append(colinfo['name'])
         return colnames
 
-    def get_usecols(self, label_only: bool = False, exclude_label: bool = False):
+    def get_usecols(self, numeric_only: bool = False, label_only: bool = False, exclude_label: bool = False):
         """
         컬럼명 배열을 반환. pandas의 read_csv()의 usecols 파라미터 전달용 함수
 
         Args:
+            numeric_only (bool): True의 경우, numeric 형식으로 가능한 column명 만을 추출
             label_only (bool): True의 경우 label에 대한 column명 만을 추출
             exclude_label (bool): True의 경우 label 컬럼을 제거하여 column명 목록 생성
         Returns:
@@ -72,6 +73,8 @@ class ColumnSpec:
         """
         colnames = []
         for colinfo in self.columns:
+            if numeric_only and not self._is_numeric_type(colinfo['type']):
+                continue
             if label_only and ('label' not in colinfo or not colinfo['label']):
                 continue
             if exclude_label and 'label' in colinfo and colinfo['label']:
@@ -113,6 +116,20 @@ class ColumnSpec:
                 return colinfo['name']
         return None
 
+    def get_is_numerics(self):
+        """
+        importance 결과 구성을 위하여 numeric 컬럼 여부 배열을 추출
+        Returns:
+
+        """
+        is_numerics = []
+        for colinfo in self.columns:
+            if 'label' in colinfo and colinfo['label']:
+                is_numerics.append(False)
+            else:
+                is_numerics.append(self._is_numeric_type(colinfo['type']))
+        return is_numerics
+
     @staticmethod
     def _get_dtype_from_strtype(typestr):
         if typestr in _mkfeat_typestr_to_dtype:
@@ -124,3 +141,7 @@ class ColumnSpec:
         if typestr in _mkfeat_typestr_to_converter:
             return _mkfeat_typestr_to_converter[typestr]
         return None
+
+    @staticmethod
+    def _is_numeric_type(self):
+        return self in ('number', 'bool')
