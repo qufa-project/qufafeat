@@ -1032,7 +1032,7 @@ class CountString(TransformPrimitive):
     input_types = [NaturalLanguage]
     return_type = Numeric
 
-    def __init__(self, string, ignore_case = True, ignore_non_alphanumeric = False, is_regex = False, match_whole_words_only = False):
+    def __init__(self, string = "", ignore_case = True, ignore_non_alphanumeric = False, is_regex = False, match_whole_words_only = False):
         self.string = string
         self.ignore_case = ignore_case
         self.ignore_non_alphanumeric = ignore_non_alphanumeric
@@ -1217,7 +1217,7 @@ class GreaterThanPrevious(TransformPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, fill_method = "pad", limit = None):
+    def __init__(self, fill_method = None, limit = None):
         self.fill_method = fill_method
         self.limit = limit
 
@@ -1444,7 +1444,7 @@ class LessThanPrevious(TransformPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, fill_method = "pad", limit = None):
+    def __init__(self, fill_method = None, limit = None):
         self.fill_method = fill_method
         self.limit = limit
 
