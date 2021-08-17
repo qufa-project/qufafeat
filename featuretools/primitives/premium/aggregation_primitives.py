@@ -919,7 +919,7 @@ class CountInsideRange(AggregationPrimitive):
     description_template = "count_inside_range"
     stack_on_self = False
 
-    def __init__(self, lower=0, upper=1, skipna=True):
+    def __init__(self, lower=0, upper=1, skipna=False):
         self.lower = lower
         self.upper = upper
         self.skipna = skipna
@@ -929,7 +929,7 @@ class CountInsideRange(AggregationPrimitive):
             count = 0
             for val in array:
                 if self.skipna == True and not val:
-                    return NaN
+                    continue
                 if val >= self.lower and val <= self.upper:
                     count += 1
             return count
@@ -981,7 +981,7 @@ class CountOutsideRange(AggregationPrimitive):
     description_template = "count_outside_range"
     stack_on_self = False
 
-    def __init__(self, lower=0, upper=1, skipna=True):
+    def __init__(self, lower=0, upper=1, skipna=False):
         self.lower = lower
         self.upper = upper
         self.skipna = skipna
@@ -991,7 +991,7 @@ class CountOutsideRange(AggregationPrimitive):
             count = 0
             for val in array:
                 if self.skipna == True and not val:
-                    return NaN
+                    continue
                 if val < self.lower or val > self.upper:
                     count += 1
             return count
@@ -1237,7 +1237,7 @@ class MaxConsecutiveFalse(AggregationPrimitive):
     input_types = [Boolean]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1270,7 +1270,7 @@ class MaxConsecutiveNegatives(AggregationPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1303,7 +1303,7 @@ class MaxConsecutivePositives(AggregationPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1336,7 +1336,7 @@ class MaxConsecutiveTrue(AggregationPrimitive):
     input_types = [Boolean]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1369,7 +1369,7 @@ class MaxConsecutiveZeros(AggregationPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1402,7 +1402,7 @@ class MaxCount(AggregationPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1426,7 +1426,7 @@ class MaxMinDelta(AggregationPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1450,7 +1450,7 @@ class MedianCount(AggregationPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
@@ -1474,7 +1474,7 @@ class MinCount(AggregationPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, skipna = True):
+    def __init__(self, skipna = False):
         self.skipna = skipna
 
     def get_function(self):
