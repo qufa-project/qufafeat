@@ -57,8 +57,7 @@ class AbsoluteDiff(TransformPrimitive):
 
     def get_function(self):
         def func_absdiff(values):
-            return np.insert(np.absolute(np.diff(values)), 0, float('nan'))
-            # return convert_time_units(values.diff().apply(lambda x: x.total_seconds()), self.unit)
+            return np.absolute(np.diff(values, prepend=float('nan')))
         return func_absdiff
 
 
@@ -1223,12 +1222,14 @@ class GreaterThanPrevious(TransformPrimitive):
 
     def get_function(self):
         def greater_than_previous(numbers):
-            results = [False]
-            for idx in range(len(numbers)-1):
-                if numbers[idx+1] > numbers[idx]:
-                    results.append(True)
-                else:
+            results = []
+            prev = None
+            for num in numbers:
+                if prev is None:
                     results.append(False)
+                else:
+                    results.append(num > prev)
+                prev = num
             return pandas.Index(results)
 
         return greater_than_previous
@@ -1247,14 +1248,17 @@ class IsFirstOccurrence(TransformPrimitive):
     return_type = Boolean
 
     def get_function(self):
-        def is_first_occurrence(numbers):
-            results = [True]
-            for idx in range(1, len(numbers)):
-                for before in range(idx):
-                    if numbers[idx] == numbers[before]:
+        def is_first_occurrence(values):
+            results = []
+            for idx in range(len(values)):
+                found = False
+                for idx_before in range(idx):
+                    if values.iloc[idx] == values.iloc[idx_before]:
                         results.append(False)
+                        found = True
                         break
-                if len(results) != (idx + 1): results.append(True)
+                if not found:
+                    results.append(True)
             return pandas.Index(results)
 
         return is_first_occurrence
@@ -1273,14 +1277,17 @@ class IsLastOccurrence(TransformPrimitive):
     return_type = Boolean
 
     def get_function(self):
-        def is_last_occurrence(numbers):
+        def is_last_occurrence(values):
             results = []
-            for idx in range(len(numbers)):
-                for after in range(idx+1, len(numbers)):
-                    if numbers[idx] == numbers[after]:
+            for idx in range(len(values)):
+                found = False
+                for idx_after in range(idx + 1, len(values)):
+                    if values.iloc[idx] == values.iloc[idx_after]:
                         results.append(False)
+                        found = True
                         break
-                if len(results) != (idx + 1): results.append(True)
+                if not found:
+                    results.append(True)
             return pandas.Index(results)
 
         return is_last_occurrence
@@ -1301,13 +1308,14 @@ class IsMaxSoFar(TransformPrimitive):
 
     def get_function(self):
         def is_max_so_far(numbers):
-            max = numbers[0]
+            max_val = None
             results = []
             for val in numbers:
-                if val >= max:
+                if max_val is None or val >= max_val:
                     results.append(True)
-                    max = val
-                else: results.append(False)
+                    max_val = val
+                else:
+                    results.append(False)
             return pandas.Index(results)
 
         return is_max_so_far
@@ -1328,13 +1336,14 @@ class IsMinSoFar(TransformPrimitive):
 
     def get_function(self):
         def is_min_so_far(numbers):
-            min = numbers[0]
+            min_val = None
             results = []
             for val in numbers:
-                if val <= min:
+                if min_val is None or val <= min_val:
                     results.append(True)
-                    min = val
-                else: results.append(False)
+                    min_val = val
+                else:
+                    results.append(False)
             return pandas.Index(results)
 
         return is_min_so_far
@@ -1450,12 +1459,14 @@ class LessThanPrevious(TransformPrimitive):
 
     def get_function(self):
         def less_than_previous(numbers):
-            results = [False]
-            for idx in range(len(numbers)-1):
-                if numbers[idx+1] < numbers[idx]:
-                    results.append(True)
-                else:
+            results = []
+            prev = None
+            for num in numbers:
+                if prev is None:
                     results.append(False)
+                else:
+                    results.append(num < prev)
+                prev = num
             return pandas.Index(results)
 
         return less_than_previous
