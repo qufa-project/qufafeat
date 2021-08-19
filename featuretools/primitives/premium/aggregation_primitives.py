@@ -363,8 +363,6 @@ class NumConsecutiveGreaterMean(AggregationPrimitive):
         return consecutive_greater_mean
 
 
-
-
 class NumConsecutiveLessMean(AggregationPrimitive):
     """Determines the length of the longest subsequence below the mean.
 
