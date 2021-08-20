@@ -51,7 +51,7 @@ class Autocorrelation(AggregationPrimitive):
 
     def get_function(self):
         def autocorr(values):
-            return pd.Series.autocorr(values, lag=self.lag)
+            return pd.Series.autocorr(values.astype(float), lag=self.lag)
 
         return autocorr
 
@@ -79,7 +79,7 @@ class Correlation(AggregationPrimitive):
 
     def get_function(self):
         def corr(values1, values2):
-            return pd.Series.corr(values1, values2, method=self.method)
+            return pd.Series.corr(values1.astype(float), values2.astype(float), method=self.method)
 
         return corr
 
@@ -304,7 +304,11 @@ class NUniqueWeeks(AggregationPrimitive):
 
     def get_function(self):
         def uniq_weeks(dates):
-            uniq = {(date.isocalendar()[0], date.isocalendar()[1]) for date in dates}
+            date_arr = []
+            for date in dates:
+                date = datetime.date(date)
+                date_arr.append(date)
+            uniq = {(date.isocalendar()[0], date.isocalendar()[1]) for date in date_arr}
             return len(uniq)
 
         return uniq_weeks
@@ -343,15 +347,19 @@ class NumConsecutiveGreaterMean(AggregationPrimitive):
 
     def get_function(self):
         def consecutive_greater_mean(values):
-            if not self.skipna:
-                for value in values:
-                    if np.isnan(value):
-                        return np.nan
+            not_non_arr = []
+            for val in values:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
 
-            mean = np.mean(values)
+            mean = np.mean(not_non_arr)
             max_len = 0
             cur_len = 0
-            for value in values:
+            for value in not_non_arr:
                 if value > mean:
                     cur_len += 1
                 else:
@@ -396,15 +404,19 @@ class NumConsecutiveLessMean(AggregationPrimitive):
 
     def get_function(self):
         def consecutive_less_mean(values):
-            if not self.skipna:
-                for value in values:
-                    if np.isnan(value):
-                        return np.nan
+            not_non_arr = []
+            for val in values:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
 
-            mean = np.mean(values)
+            mean = np.mean(not_non_arr)
             max_len = 0
             cur_len = 0
-            for value in values:
+            for value in not_non_arr:
                 if value < mean:
                     cur_len += 1
                 else:
@@ -441,7 +453,7 @@ class NumFalseSinceLastTrue(AggregationPrimitive):
         def false_since_last_true(values):
             cnt = 0
             for i in range(len(values) - 1, -1, -1):
-                if np.isnan(values[i]):
+                if values[i] is None:
                     continue
                 if not values[i]:
                     cnt += 1
@@ -499,7 +511,7 @@ class NumTrueSinceLastFalse(AggregationPrimitive):
         def true_since_last_false(values):
             cnt = 0
             for i in range(len(values) - 1, -1, -1):
-                if np.isnan(values[i]):
+                if values[i] is None:
                     continue
                 if values[i]:
                     cnt += 1
@@ -532,7 +544,7 @@ class NumZeroCrossings(AggregationPrimitive):
         def zero_crossings(values):
             not_nan_list = []
             for value in values:
-                if not np.isnan(value):
+                if not (value is None):
                     not_nan_list.append(value)
             sum = 0
             for i in range(1, len(not_nan_list)):
@@ -834,8 +846,19 @@ class CountAboveMean(AggregationPrimitive):
     def get_function(self):
         def count_above_mean(array):
             count = 0
-            mean = sum(array) / len(array)
+            len = 0
+            not_non_arr = []
             for val in array:
+                if val:
+                    not_non_arr.append(val)
+                    len += 1
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            mean = sum(not_non_arr) / len
+            for val in not_non_arr:
                 if val > mean:
                     count += 1
             return count
@@ -864,8 +887,19 @@ class CountBelowMean(AggregationPrimitive):
     def get_function(self):
         def count_below_mean(array):
             count = 0
-            mean = sum(array) / len(array)
+            len = 0
+            not_non_arr = []
             for val in array:
+                if val:
+                    not_non_arr.append(val)
+                    len += 1
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            mean = sum(not_non_arr) / len
+            for val in not_non_arr:
                 if val < mean:
                     count += 1
             return count
@@ -895,6 +929,8 @@ class CountGreaterThan(AggregationPrimitive):
         def count_greater_than(array):
             count = 0
             for val in array:
+                if not val:
+                    continue
                 if val > self.threshold:
                     count += 1
             return count
@@ -926,8 +962,11 @@ class CountInsideRange(AggregationPrimitive):
         def count_inside_range(array):
             count = 0
             for val in array:
-                if self.skipna == True and not val:
+                if self.skipna and not val:
                     continue
+                elif not self.skipna and not val:
+                    return np.nan
+
                 if val >= self.lower and val <= self.upper:
                     count += 1
             return count
@@ -957,6 +996,8 @@ class CountLessThan(AggregationPrimitive):
         def count_less_than(array):
             count = 0
             for val in array:
+                if not val:
+                    continue
                 if val < self.threshold:
                     count += 1
             return count
@@ -988,8 +1029,11 @@ class CountOutsideRange(AggregationPrimitive):
         def count_outside_range(array):
             count = 0
             for val in array:
-                if self.skipna == True and not val:
+                if self.skipna and not val:
                     continue
+                elif not self.skipna and not val:
+                    return np.nan
+
                 if val < self.lower or val > self.upper:
                     count += 1
             return count
@@ -1018,13 +1062,20 @@ class CountInsideNthSTD(AggregationPrimitive):
     def get_function(self):
         def count_inside_nth_std(array):
             count = 0
-            mean = sum(array) / len(array)
-            std = 0
+            not_non_arr = []
             for val in array:
+                if not val:
+                    continue
+                else:
+                    not_non_arr.append(val)
+
+            mean = sum(not_non_arr) / len(array)
+            std = 0
+            for val in not_non_arr:
                 std += (val-mean) ** 2
             std_dev = std / len(array)
             std_dev = math.sqrt(std_dev)
-            for val in array:
+            for val in not_non_arr:
                 if val <= std_dev:
                     count += 1
             return count
@@ -1053,13 +1104,20 @@ class CountOutsideNthSTD(AggregationPrimitive):
     def get_function(self):
         def count_outside_nth_std(array):
             count = 0
-            mean = sum(array) / len(array)
-            std = 0
+            not_non_arr = []
             for val in array:
+                if not val:
+                    continue
+                else:
+                    not_non_arr.append(val)
+
+            mean = sum(not_non_arr) / len(array)
+            std = 0
+            for val in not_non_arr:
                 std += (val-mean) ** 2
             std_dev = std / len(array)
             std_dev = math.sqrt(std_dev)
-            for val in array:
+            for val in not_non_arr:
                 if val > std_dev:
                     count += 1
             return count
@@ -1218,6 +1276,7 @@ class Kurtosis(AggregationPrimitive):
 
     def get_function(self):
         def kurtosis(array):
+            array = list(filter(None, array))
             return scipy.stats.kurtosis(array, None, self.fisher, self.bias, self.nan_policy)
 
         return kurtosis
@@ -1242,12 +1301,21 @@ class MaxConsecutiveFalse(AggregationPrimitive):
         def max_consecutive_false(array):
             max_count = 0
             count = -1
+            not_non_arr = []
             for val in array:
-                if val == False and count == -1:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            for val in not_non_arr:
+                if not val and count == -1:
                     count = 1
-                elif val == False and count > 0:
+                elif not val and count > 0:
                     count += 1
-                elif val == True:
+                elif val:
                     max_count = max(max_count, count)
                     count = -1
             max_count = max(max_count, count)
@@ -1275,7 +1343,16 @@ class MaxConsecutiveNegatives(AggregationPrimitive):
         def max_consecutive_negatives(array):
             max_count = 0
             count = -1
+            not_non_arr = []
             for val in array:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            for val in not_non_arr:
                 if val < 0 and count == -1:
                     count = 1
                 elif val < 0 and count > 0:
@@ -1308,7 +1385,16 @@ class MaxConsecutivePositives(AggregationPrimitive):
         def max_consecutive_positives(array):
             max_count = 0
             count = -1
+            not_non_arr = []
             for val in array:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            for val in not_non_arr:
                 if val > 0 and count == -1:
                     count = 1
                 elif val > 0 and count > 0:
@@ -1341,12 +1427,21 @@ class MaxConsecutiveTrue(AggregationPrimitive):
         def max_consecutive_true(array):
             max_count = 0
             count = -1
+            not_non_arr = []
             for val in array:
-                if val == True and count == -1:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            for val in not_non_arr:
+                if val and count == -1:
                     count = 1
-                elif val == True and count > 0:
+                elif val and count > 0:
                     count += 1
-                elif val == False:
+                elif not val:
                     max_count = max(max_count, count)
                     count = -1
             max_count = max(max_count, count)
@@ -1374,7 +1469,16 @@ class MaxConsecutiveZeros(AggregationPrimitive):
         def max_consecutive_zeros(array):
             max_count = 0
             count = -1
+            not_non_arr = []
             for val in array:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            for val in not_non_arr:
                 if val == 0 and count == -1:
                     count = 1
                 elif val == 0 and count > 0:
@@ -1405,7 +1509,16 @@ class MaxCount(AggregationPrimitive):
 
     def get_function(self):
         def max_count(array):
-            max_value = max(array)
+            not_non_arr = []
+            for val in array:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            max_value = max(not_non_arr)
             count = list(array).count(max_value)
             return count
 
@@ -1429,8 +1542,17 @@ class MaxMinDelta(AggregationPrimitive):
 
     def get_function(self):
         def max_min_delta(array):
-            max_value = max(array)
-            min_value = min(array)
+            not_non_arr = []
+            for val in array:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            max_value = max(not_non_arr)
+            min_value = min(not_non_arr)
             return (max_value - min_value)
 
         return max_min_delta
@@ -1453,7 +1575,7 @@ class MedianCount(AggregationPrimitive):
 
     def get_function(self):
         def median_count(numbers):
-            median_value = statistics.median(numbers)
+            median_value = statistics.median(numbers.astype(float))
             count = list(numbers).count(median_value)
             return count
 
@@ -1477,7 +1599,16 @@ class MinCount(AggregationPrimitive):
 
     def get_function(self):
         def min_count(array):
-            min_value = min(array)
+            not_non_arr = []
+            for val in array:
+                if val:
+                    not_non_arr.append(val)
+                elif self.skipna and not val:
+                    continue
+                elif not self.skipna and not val:
+                    return np.nan
+
+            min_value = min(not_non_arr)
             count = list(array).count(min_value)
             return count
 
