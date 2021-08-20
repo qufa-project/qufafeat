@@ -6,6 +6,7 @@ from .columnspec import ColumnSpec
 from .opmgr import OperatorManager
 from .feathelper import FeatureHelper
 from .error import Error
+import featsel
 
 
 class FeatureExtractor:
@@ -65,10 +66,12 @@ class FeatureExtractor:
 
         opmgr = OperatorManager(operators)
         self.proghandler = proghandler
-        self.feature_matrix, features = ft.dfs(entityset=self.es, target_entity=self.es.target_entity_name,
-                                               trans_primitives=opmgr.get_transform_operators(),
-                                               agg_primitives=opmgr.get_aggregation_operators(),
-                                               progress_callback=self._progress_report, max_depth=3)
+        feature_matrix, features = ft.dfs(entityset=self.es, target_entity=self.es.target_entity_name,
+                                          trans_primitives=opmgr.get_transform_operators(),
+                                          agg_primitives=opmgr.get_aggregation_operators(),
+                                          progress_callback=self._progress_report, max_depth=3)
+        self.feature_matrix, features = featsel.select_features(feature_matrix, features)
+
         self.feature_helper = FeatureHelper(features)
         df_label = self.es.get_df_label()
         if df_label is not None:
