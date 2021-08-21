@@ -5,10 +5,12 @@ from pandas import DataFrame
 
 from featuretools import selection
 
+from elapsed_time import ElapsedTime
+
 THRESHOLD = 0.02
 
 
-def select_features(df: DataFrame, features):
+def select_features(df: DataFrame, features, elapsed_time: ElapsedTime):
     df_new = DataFrame()
     features_new = []
     f_names_check = []
@@ -32,6 +34,7 @@ def select_features(df: DataFrame, features):
             df_new[name] = df[name]
             features_new.append(feat)
 
+    elapsed_time.mark()
     df_new, features_new = selection.remove_highly_correlated_features(df_new, features_new,
                                                                        features_to_check=f_names_check)
     return df_new, features_new

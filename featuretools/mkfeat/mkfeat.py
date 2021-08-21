@@ -74,3 +74,4 @@ if __name__ == "__main__":
         else:
             extractor.save(conf['path_output'])
     print(extractor.get_feature_info())
+    print("elapsed time:", extractor.get_elapsed_secs())

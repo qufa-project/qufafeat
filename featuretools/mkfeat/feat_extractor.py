@@ -6,6 +6,7 @@ from .columnspec import ColumnSpec
 from .opmgr import OperatorManager
 from .feathelper import FeatureHelper
 from .error import Error
+from .elapsed_time import ElapsedTime
 import featsel
 
 
@@ -31,6 +32,7 @@ class FeatureExtractor:
         self._columns = columns
         self._proghandler = proghandler
         self._prog = None
+        self._elapsed_time = ElapsedTime()
 
     def _load(self) -> Error:
         """
@@ -70,16 +72,22 @@ class FeatureExtractor:
             Error.ERR_DATA_NOT_FOUND: 데이터 경로가 존재하지 않음
         """
 
+        self._elapsed_time.mark()
+
         err = self._load()
         if err != Error.OK:
             return err
+
+        self._elapsed_time.mark()
 
         opmgr = OperatorManager(operators)
         feature_matrix, features = ft.dfs(entityset=self.es, target_entity=self.es.target_entity_name,
                                           trans_primitives=opmgr.get_transform_operators(),
                                           agg_primitives=opmgr.get_aggregation_operators(),
                                           progress_callback=self._progress_report, max_depth=3)
-        self.feature_matrix, features = featsel.select_features(feature_matrix, features)
+        self._elapsed_time.mark()
+        self.feature_matrix, features = featsel.select_features(feature_matrix, features, self._elapsed_time)
+        self._elapsed_time.mark()
 
         self.feature_helper = FeatureHelper(features)
         df_label = self.es.get_df_label()
@@ -133,3 +141,6 @@ class FeatureExtractor:
         if self.feature_matrix is None:
             return Error.ERR_ONGOING
         return self.feature_helper.to_array()
+
+    def get_elapsed_secs(self):
+        return self._elapsed_time.get_elapsed_secs()
