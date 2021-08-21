@@ -60,12 +60,12 @@ if __name__ == "__main__":
         logger.error("input path does not exist: {}".format(path_input))
         exit(1)
 
-    extractor = FeatureExtractor()
-    err = extractor.load(path_input, columns)
+    extractor = FeatureExtractor(path_input, columns, handle_progress)
+    err = extractor.extract_features(conf['operators'])
     if err != Error.OK:
-        logger.error("load error: {}".format(err))
+        logger.error("failed to extract: {}".format(err))
         exit(2)
-    extractor.extract_features(conf['operators'], handle_progress)
+
     print()
 
     if 'path_output' in conf:
