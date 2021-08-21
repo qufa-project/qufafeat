@@ -8,6 +8,7 @@ _typestr_to_mkfeat = {
     "date": "date",
     "datetime": "date",
     "numeric": "number",
+    "ordinal": "number",
     "boolean": "bool",
     "categorical": "class",
 }
