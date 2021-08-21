@@ -116,6 +116,13 @@ class ColumnSpec:
                 return colinfo['name']
         return None
 
+    def get_skip_colnames(self):
+        colnames = []
+        for colinfo in self.columns:
+            if ('label' in colinfo and colinfo['label']) or ('bypass' in colinfo and colinfo['bypass']):
+                colnames.append(colinfo['name'])
+        return colnames
+
     def get_is_numerics(self):
         """
         importance 결과 구성을 위하여 numeric 컬럼 여부 배열을 추출
@@ -124,7 +131,7 @@ class ColumnSpec:
         """
         is_numerics = []
         for colinfo in self.columns:
-            if 'label' in colinfo and colinfo['label']:
+            if 'label' in colinfo and colinfo['label'] or 'bypass' in colinfo and colinfo['bypass']:
                 is_numerics.append(False)
             else:
                 is_numerics.append(self._is_numeric_type(colinfo['type']))

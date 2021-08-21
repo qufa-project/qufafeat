@@ -90,10 +90,9 @@ class FeatureExtractor:
         self._elapsed_time.mark()
 
         self.feature_helper = FeatureHelper(features)
-        df_label = self.es.get_df_label()
-        if df_label is not None:
-            self.feature_matrix = self.feature_matrix.merge(df_label, how='left', on=df_label.columns[0])
-            self.feature_matrix.set_index(df_label.columns[0], inplace=True)
+        df_skip = self.es.get_df_skip()
+        if df_skip is not None:
+            self.feature_matrix = self.feature_matrix.join(df_skip)
 
         if self._proghandler is not None:
             self._proghandler(100)

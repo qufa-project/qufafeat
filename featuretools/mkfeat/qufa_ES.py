@@ -12,7 +12,7 @@ class QufaES(EntitySet):
     def __init__(self):
         super().__init__()
         self.target_entity_name = None
-        self._df_label = None
+        self._df_skip = None
 
     def load_from_csv(self, path, colspec: ColumnSpec) -> Error:
         csv = QufaCsv(path, colspec)
@@ -21,10 +21,13 @@ class QufaES(EntitySet):
             return data
 
         colname_key = colspec.get_key_colname()
-        colname_label = colspec.get_label_colname()
-        if colname_label:
-            self._df_label = data[[colname_key, colname_label]]
-            data = data.drop(columns=colname_label)
+        colnames_skip = colspec.get_skip_colnames()
+        if colnames_skip:
+            colnames_skip.insert(0, colname_key)
+            self._df_skip = data[colnames_skip]
+            self._df_skip.set_index(colname_key, inplace=True)
+            colnames_skip.remove(colname_key)
+            data = data.drop(columns=colnames_skip)
 
         norminfos = normalize(data, colname_key)
 
@@ -39,8 +42,8 @@ class QufaES(EntitySet):
 
         return Error.OK
 
-    def get_df_label(self):
-        return self._df_label
+    def get_df_skip(self):
+        return self._df_skip
 
     def _search_owner_entity(self, varname):
         for et in self.entities:
