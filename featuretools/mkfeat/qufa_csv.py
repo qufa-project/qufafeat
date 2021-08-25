@@ -1,4 +1,5 @@
 import pandas as pd
+import csv
 
 from .columnspec import ColumnSpec
 from .error import Error
@@ -14,7 +15,7 @@ class QufaCsv:
         self._colspec = colspec
         self._skiprows = 1 if csv_has_header else None
 
-    def load(self, label_only: bool = False, exclude_label: bool = False, numeric_only: bool = False):
+    def load(self, callback, label_only: bool = False, exclude_label: bool = False, numeric_only: bool = False):
         usecols = None
         colnames = self._colspec.get_colnames()
         if len(colnames) != self._guess_n_columns():
@@ -22,10 +23,22 @@ class QufaCsv:
         usecols = self._colspec.get_usecols(label_only=label_only, exclude_label=exclude_label,
                                             numeric_only=numeric_only)
 
+        with open(self._path, "r") as f:
+            reader = csv.reader(f, delimiter=",")
+            data = list(reader)
+            row_count = len(data)
+
         try:
-            data = pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
+            chunk_size = row_count // 10
+            prog = 0
+            callback(0, prog, 0, True)
+            for data in pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
                                 skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
-                                true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'])
+                                true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'],
+                                chunksize=chunk_size):
+                prog += 1
+                callback(0, prog, 0, True)
+
         except ValueError:
             return Error.ERR_COLUMN_TYPE
 

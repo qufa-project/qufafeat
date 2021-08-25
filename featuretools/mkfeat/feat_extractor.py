@@ -49,10 +49,12 @@ class FeatureExtractor:
         if err != Error.OK:
             return err
         self.es = QufaES()
-        return self.es.load_from_csv(self._path_input, colspec)
+        return self.es.load_from_csv(self._path_input, self._progress_report, colspec)
 
-    def _progress_report(self, update, progress_percent, time_elapsed):
+    def _progress_report(self, update, progress_percent, time_elapsed, csv_read=False):
         prog = int(progress_percent)
+        if not csv_read:
+            prog = 10 + prog * 0.9
         if prog >= 100:
             prog = 99
         if self._proghandler is not None:
