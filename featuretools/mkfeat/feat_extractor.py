@@ -53,8 +53,11 @@ class FeatureExtractor:
 
     def _progress_report(self, update, progress_percent, time_elapsed, csv_read=False):
         prog = int(progress_percent)
-        if not csv_read:
+        if csv_read:
+            prog = prog * 0.1
+        else:
             prog = 10 + prog * 0.9
+
         if prog >= 100:
             prog = 99
         if self._proghandler is not None:

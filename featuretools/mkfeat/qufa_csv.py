@@ -1,5 +1,4 @@
 import pandas as pd
-import csv
 
 from .columnspec import ColumnSpec
 from .error import Error
@@ -15,6 +14,11 @@ class QufaCsv:
         self._colspec = colspec
         self._skiprows = 1 if csv_has_header else None
 
+    def get_row(self, path):
+        with open(path, "r") as f:
+            lines = f.readlines()
+            return len(lines)
+
     def load(self, callback, label_only: bool = False, exclude_label: bool = False, numeric_only: bool = False):
         usecols = None
         colnames = self._colspec.get_colnames()
@@ -23,26 +27,27 @@ class QufaCsv:
         usecols = self._colspec.get_usecols(label_only=label_only, exclude_label=exclude_label,
                                             numeric_only=numeric_only)
 
-        with open(self._path, "r") as f:
-            reader = csv.reader(f, delimiter=",")
-            data = list(reader)
-            row_count = len(data)
+        row_count = self.get_row(self._path)
 
         try:
-            chunk_size = row_count // 10
+            chunk_size = 10000
+            chunk_prog = chunk_size / row_count * 100
             prog = 0
-            callback(0, prog, 0, True)
+            data_arr = []
             for data in pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
                                 skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
                                 true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'],
                                 chunksize=chunk_size):
-                prog += 1
+                data_arr.append(data)
+                prog += chunk_prog
                 callback(0, prog, 0, True)
+
+            data_concat = pd.concat([data for data in data_arr])
 
         except ValueError:
             return Error.ERR_COLUMN_TYPE
 
-        return data
+        return data_concat
 
     def _guess_n_columns(self):
         data = pd.read_csv(self._path, header=0, skiprows=self._skiprows, nrows=1)
