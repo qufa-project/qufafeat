@@ -14,9 +14,9 @@ class QufaES(EntitySet):
         self.target_entity_name = None
         self._df_skip = None
 
-    def load_from_csv(self, path, colspec: ColumnSpec) -> Error:
+    def load_from_csv(self, path, callback, colspec: ColumnSpec) -> Error:
         csv = QufaCsv(path, colspec)
-        data = csv.load()
+        data = csv.load(callback)
         if isinstance(data, Error):
             return data
 

@@ -6,6 +6,7 @@ from .columnspec import ColumnSpec
 from .opmgr import OperatorManager
 from .feathelper import FeatureHelper
 from .error import Error
+from .extract_phase import ExtractPhase
 from .elapsed_time import ElapsedTime
 import featsel
 
@@ -49,15 +50,22 @@ class FeatureExtractor:
         if err != Error.OK:
             return err
         self.es = QufaES()
-        return self.es.load_from_csv(self._path_input, colspec)
+        return self.es.load_from_csv(self._path_input, self._progress_report, colspec)
 
-    def _progress_report(self, update, progress_percent, time_elapsed):
-        prog = int(progress_percent)
+    def _progress_report(self, prog, phase: ExtractPhase):
+        if phase == ExtractPhase.READ_CSV:
+            prog = int(prog * 0.1)
+        else:
+            prog = int(10 + prog * 0.9)
+
         if prog >= 100:
             prog = 99
         if self._proghandler is not None:
             self._proghandler(prog)
         self._prog = prog
+
+    def _progress_report_dfs(self, update, progress_percent, time_elapsed):
+        self._progress_report(int(progress_percent), ExtractPhase.DFS)
 
     def extract_features(self, operators: list) -> Error:
         """
@@ -84,7 +92,7 @@ class FeatureExtractor:
         feature_matrix, features = ft.dfs(entityset=self.es, target_entity=self.es.target_entity_name,
                                           trans_primitives=opmgr.get_transform_operators(),
                                           agg_primitives=opmgr.get_aggregation_operators(),
-                                          progress_callback=self._progress_report, max_depth=3)
+                                          progress_callback=self._progress_report_dfs, max_depth=3)
         self._elapsed_time.mark()
         self.feature_matrix, features = featsel.select_features(feature_matrix, features, self._elapsed_time)
         self._elapsed_time.mark()
