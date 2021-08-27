@@ -94,14 +94,20 @@ class FeatureExtractor:
                                           agg_primitives=opmgr.get_aggregation_operators(),
                                           progress_callback=self._progress_report_dfs, max_depth=3)
         self._elapsed_time.mark()
-        self.feature_matrix, features = featsel.select_features(feature_matrix, features, int(len(self._columns) * 1.5),
-                                                                self._elapsed_time)
+        df_label = self.es.get_df_label()
+        df_train = self.es.get_df_train()
+        self.feature_matrix, features = featsel.select_features(feature_matrix, features, int(len(self._columns) * 2.5),
+                                                                df_label, df_train, self._elapsed_time)
         self._elapsed_time.mark()
 
         self.feature_helper = FeatureHelper(features)
-        df_skip = self.es.get_df_skip()
-        if df_skip is not None:
-            self.feature_matrix = self.feature_matrix.join(df_skip)
+        df_bypass = self.es.get_df_bypass()
+        if df_bypass is not None:
+            self.feature_matrix = self.feature_matrix.join(df_bypass)
+        if df_train is not None:
+            self.feature_matrix = self.feature_matrix.join(df_train)
+        if df_label is not None:
+            self.feature_matrix = self.feature_matrix.join(df_label)
 
         if self._proghandler is not None:
             self._proghandler(100)

@@ -76,10 +76,10 @@ class OperatorManager:
 
     def get_transform_operators(self):
         if self.operators is None:
-            return random.sample(self.transforms - self.premium_transform, 15)
+            return random.sample(self.transforms - self.premium_transform, 12)
         return set(self.operators & self.transforms)
 
     def get_aggregation_operators(self):
         if self.operators is None:
-            return random.sample(self.aggregations - self.premium_aggregation, 10)
+            return random.sample(self.aggregations - self.premium_aggregation, 8)
         return set(self.operators & self.aggregations)

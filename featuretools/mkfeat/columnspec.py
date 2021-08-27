@@ -116,10 +116,16 @@ class ColumnSpec:
                 return colinfo['name']
         return None
 
-    def get_skip_colnames(self):
+    def get_train_colname(self):
+        for colinfo in self.columns:
+            if 'train' in colinfo and colinfo['train']:
+                return colinfo['name']
+        return None
+
+    def get_bypass_colnames(self):
         colnames = []
         for colinfo in self.columns:
-            if ('label' in colinfo and colinfo['label']) or ('bypass' in colinfo and colinfo['bypass']):
+            if 'bypass' in colinfo and colinfo['bypass']:
                 colnames.append(colinfo['name'])
         return colnames
 

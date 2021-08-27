@@ -1,6 +1,4 @@
 from featuretools.entityset import EntitySet
-import autonormalize as an
-import pandas as pd
 
 from .columnspec import ColumnSpec
 from .error import Error
@@ -12,7 +10,9 @@ class QufaES(EntitySet):
     def __init__(self):
         super().__init__()
         self.target_entity_name = None
-        self._df_skip = None
+        self._df_label = None
+        self._df_train = None
+        self._df_bypass = None
 
     def load_from_csv(self, path, callback, colspec: ColumnSpec) -> Error:
         csv = QufaCsv(path, colspec)
@@ -21,13 +21,25 @@ class QufaES(EntitySet):
             return data
 
         colname_key = colspec.get_key_colname()
-        colnames_skip = colspec.get_skip_colnames()
-        if colnames_skip:
-            colnames_skip.insert(0, colname_key)
-            self._df_skip = data[colnames_skip]
-            self._df_skip.set_index(colname_key, inplace=True)
-            colnames_skip.remove(colname_key)
-            data = data.drop(columns=colnames_skip)
+        colname_label = colspec.get_label_colname()
+        if colname_label:
+            self._df_label = data[[colname_key, colname_label]]
+            data.drop(columns=colname_label, inplace=True)
+            self._df_label.set_index(colname_key, inplace=True)
+
+        colname_train = colspec.get_train_colname()
+        if colname_train:
+            self._df_train = data[[colname_key, colname_train]]
+            data.drop(columns=colname_train, inplace=True)
+            self._df_train.set_index(colname_key, inplace=True)
+
+        colnames_bypass = colspec.get_bypass_colnames()
+        if colnames_bypass:
+            colnames_bypass.insert(0, colname_key)
+            self._df_bypass = data[colnames_bypass]
+            self._df_bypass.set_index(colname_key, inplace=True)
+            colnames_bypass.remove(colname_key)
+            data = data.drop(columns=colnames_bypass)
 
         norminfos = normalize(data, colname_key)
 
@@ -42,8 +54,14 @@ class QufaES(EntitySet):
 
         return Error.OK
 
-    def get_df_skip(self):
-        return self._df_skip
+    def get_df_label(self):
+        return self._df_label
+
+    def get_df_train(self):
+        return self._df_train
+
+    def get_df_bypass(self):
+        return self._df_bypass
 
     def _search_owner_entity(self, varname):
         for et in self.entities:
