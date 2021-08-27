@@ -8,7 +8,7 @@ from .feathelper import FeatureHelper
 from .error import Error
 from .extract_phase import ExtractPhase
 from .elapsed_time import ElapsedTime
-import featsel
+from . import featsel
 
 
 class FeatureExtractor:
@@ -55,8 +55,14 @@ class FeatureExtractor:
     def _progress_report(self, prog, phase: ExtractPhase):
         if phase == ExtractPhase.READ_CSV:
             prog = int(prog * 0.1)
+        elif phase == ExtractPhase.DFS:
+            prog = int(10 + prog * 0.5)
+        elif phase == ExtractPhase.REMOVE_SINGLE:
+            prog = int(60 + prog * 0.1)
+        elif phase == ExtractPhase.REMOVE_CORREL:
+            prog = int(70 + prog * 0.2)
         else:
-            prog = int(10 + prog * 0.9)
+            prog = int(90 + prog * 0.1)
 
         if prog >= 100:
             prog = 99
@@ -97,7 +103,8 @@ class FeatureExtractor:
         df_label = self.es.get_df_label()
         df_train = self.es.get_df_train()
         self.feature_matrix, features = featsel.select_features(feature_matrix, features, int(len(self._columns) * 2.5),
-                                                                df_label, df_train, self._elapsed_time)
+                                                                df_label, df_train, self._progress_report,
+                                                                self._elapsed_time)
         self._elapsed_time.mark()
 
         self.feature_helper = FeatureHelper(features)

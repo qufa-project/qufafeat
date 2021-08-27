@@ -7,13 +7,14 @@ from pandas import DataFrame
 
 from featuretools.selection import (remove_highly_correlated_features, remove_single_value_features)
 
-from elapsed_time import ElapsedTime
+from .elapsed_time import ElapsedTime
+from .extract_phase import ExtractPhase
 
 THRESHOLD = 0.02
 
 
 def select_features(df: DataFrame, features, n_feats,
-                    df_label: DataFrame, df_train: DataFrame, elapsed_time: ElapsedTime):
+                    df_label: DataFrame, df_train: DataFrame, proghandler, elapsed_time: ElapsedTime):
     """
     Select features based on feature variance or score against label(if any)
 
@@ -30,10 +31,11 @@ def select_features(df: DataFrame, features, n_feats,
     """
 
     df, features = remove_single_value_features(df, features, count_nan_as_value=True)
-
+    proghandler(100, ExtractPhase.REMOVE_SINGLE)
     elapsed_time.mark()
-    df, features = _remove_correlated_features(df, features)
 
+    df, features = _remove_correlated_features(df, features)
+    proghandler(100, ExtractPhase.REMOVE_CORREL)
     elapsed_time.mark()
 
     df_test = None
@@ -63,6 +65,8 @@ def select_features(df: DataFrame, features, n_feats,
             df = pd.concat([df, df_test])
     else:
         _select_highvar_features(df, df_test, features, n_feats)
+
+    proghandler(100, ExtractPhase.SELECT_BEST)
     return df, features
 
 
