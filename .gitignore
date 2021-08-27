@@ -133,3 +133,8 @@ ENV/
 
 #IDE
 .vscode
+
+#csv,json
+/*.csv
+/*.json
+*~
