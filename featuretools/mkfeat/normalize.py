@@ -1,11 +1,56 @@
 from pandas import DataFrame
 import autonormalize as an
 
+n_samples = 1000
+accuracy = 0.98
+N_ITERS = 4
+
 
 def normalize(df: DataFrame, key_colname):
-    if len(df) > 1000:
-        df = df.sample(n=1000)
-    es = an.auto_entityset(df, index=key_colname, accuracy=0.98)
+    if len(df) > n_samples * N_ITERS:
+        norminfos = None
+        for _ in range(N_ITERS):
+            df_samp = df.sample(n=n_samples)
+            norminfos_new = _get_norminfos(df_samp, key_colname)
+            if norminfos is None:
+                norminfos = norminfos_new
+            else:
+                _merge_norminfos(norminfos, norminfos_new)
+        return norminfos
+    else:
+        return _get_norminfos(df, key_colname)
+
+
+def _merge_norminfos(norminfos, norminfos_new):
+    for norminfo_new in norminfos_new:
+        if _has_norminfos(norminfos, norminfo_new[0]):
+            norminfo_merged = [norminfos[0][0]]
+            for merged in set(norminfos[0][1:]) & set(norminfo_new[1:]):
+                norminfo_merged.append(merged)
+            norminfos.pop(0)
+            norminfos.insert(0, norminfo_merged)
+
+
+def _has_norminfos(norminfos, key):
+    for norminfo in norminfos:
+        if norminfo[0] == key:
+            _clear_norminfos_upto_key(norminfos, key)
+            return True
+    return False
+
+
+def _clear_norminfos_upto_key(norminfos, key):
+    idx = 0
+    for norminfo in norminfos:
+        if norminfo[0] == key:
+            break
+        idx += 1
+    for _ in range(idx):
+        norminfos.pop(0)
+
+
+def _get_norminfos(df: DataFrame, key_colname):
+    es = an.auto_entityset(df, index=key_colname, accuracy=accuracy)
 
     norminfos = []
     # 첫번째 이외의 entity들에 대해서. 첫번째 entity가 main임을 가정
