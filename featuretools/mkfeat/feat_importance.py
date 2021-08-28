@@ -1,9 +1,9 @@
 import os.path
-import pandas as pd
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 
 from .error import Error
+from .progress_phase import ProgressPhase
 from .columnspec import ColumnSpec
 from .qufa_csv import QufaCsv
 
@@ -15,56 +15,75 @@ class TrainCallback(xgb.callback.TrainingCallback):
 
     def after_iteration(self, model, epoch: int, evals_log) -> bool:
         prog = int(100.0 * epoch / self.n_epochs)
-        if prog >= 100:
-            prog = 99
         if self.proghandler:
-            return self.proghandler(prog)
+            return self.proghandler(prog, ProgressPhase.IMPORTANCE)
         return False
 
 
 class FeatureImportance:
-    def __init__(self):
+    def __init__(self, path_data: str, columns_data: dict, path_label: str, columns_label: dict, proghandler: callable):
         self.data = None
         self.label = None
         self.model = None
         self.n_epochs = 300
+        self._path_data = path_data
+        self._columns_data = columns_data
+        self._path_label = path_label
+        self._columns_label = columns_label
+        self._proghandler = proghandler
         self._colspec_data: ColumnSpec = None
 
-    def load(self, path_data: str, columns_data: dict, path_label: str, columns_label: dict) -> Error:
-        if path_data is None or columns_data is None:
+    def _load(self) -> Error:
+        if self._path_data is None or self._columns_data is None:
             return Error.ERR_INVALID_ARG
-        if not os.path.isfile(path_data):
+        if not os.path.isfile(self._path_data):
             return Error.ERR_DATA_NOT_FOUND
-        if path_label is not None:
-            if columns_label is None:
+        if self._path_label is not None:
+            if self._columns_label is None:
                 return Error.ERR_INVALID_ARG
-            if not os.path.isfile(path_label):
+            if not os.path.isfile(self._path_label):
                 return Error.ERR_LABEL_NOT_FOUND
 
-        self._colspec_data = colspec_data = ColumnSpec(columns_data)
-        if path_label is None:
+        self._colspec_data = colspec_data = ColumnSpec(self._columns_data)
+        if self._path_label is None:
             if colspec_data.get_label_colname() is None:
                 return Error.ERR_LABEL_NOT_FOUND
 
-        csv_data = QufaCsv(path_data, colspec_data)
-        exclude_label = True if path_label is None else False
-        data = csv_data.load(exclude_label=exclude_label, numeric_only=True)
+        csv_data = QufaCsv(self._path_data, colspec_data)
+        exclude_label = True if self._path_label is None else False
+        data = csv_data.load(self._progress_report, exclude_label=exclude_label, numeric_only=True)
         if isinstance(data, Error):
             return data
         self.data = data
 
-        if path_label is None:
-            label = csv_data.load(label_only=True)
+        if self._path_label is None:
+            label = csv_data.load(None, label_only=True)
         else:
-            colspec_label = ColumnSpec(columns_label)
-            csv_label = QufaCsv(path_label, colspec_label)
-            label = csv_label.load()
+            colspec_label = ColumnSpec(self._columns_label)
+            csv_label = QufaCsv(self._path_label, colspec_label)
+            label = csv_label.load(None)
         if isinstance(label, Error):
             return label
         self.label = label
         return Error.OK
 
-    def analyze(self, proghandler: callable = None):
+    def _progress_report(self, prog, phase: ProgressPhase):
+        if phase == ProgressPhase.READ_CSV:
+            prog = int(prog * 0.2)
+        else:
+            prog = int(20 + prog * 0.8)
+
+        if prog >= 100:
+            prog = 99
+        if self._proghandler is not None:
+            self._proghandler(prog)
+        self._prog = prog
+
+    def analyze(self) -> Error:
+        err = self._load()
+        if err != Error.OK:
+            return err
+
         xtr, xv, ytr, yv = train_test_split(self.data.values, self.label, test_size=0.2, random_state=0)
         dtrain = xgb.DMatrix(xtr, label=ytr)
         dvalid = xgb.DMatrix(xv, label=yv)
@@ -80,12 +99,14 @@ class FeatureImportance:
             'objective': 'reg:linear',
         }
 
-        callback = TrainCallback(proghandler, self.n_epochs)
+        callback = TrainCallback(self._progress_report, self.n_epochs)
         self.model = xgb.train(params=params, dtrain=dtrain, num_boost_round=self.n_epochs,
                                callbacks=[callback],
                                evals=evals, early_stopping_rounds=60, maximize=False, verbose_eval=10)
-        if proghandler is not None:
-            proghandler(100)
+        if self._proghandler is not None:
+            self._proghandler(100)
+
+        return Error.OK
 
     def get_importance(self):
         fscores = self.model.get_fscore()

@@ -8,7 +8,7 @@ from pandas import DataFrame
 from featuretools.selection import (remove_highly_correlated_features, remove_single_value_features)
 
 from .elapsed_time import ElapsedTime
-from .extract_phase import ExtractPhase
+from .progress_phase import ProgressPhase
 
 THRESHOLD = 0.02
 
@@ -31,11 +31,11 @@ def select_features(df: DataFrame, features, n_feats,
     """
 
     df, features = remove_single_value_features(df, features, count_nan_as_value=True)
-    proghandler(100, ExtractPhase.REMOVE_SINGLE)
+    proghandler(100, ProgressPhase.REMOVE_SINGLE)
     elapsed_time.mark()
 
     df, features = _remove_correlated_features(df, features)
-    proghandler(100, ExtractPhase.REMOVE_CORREL)
+    proghandler(100, ProgressPhase.REMOVE_CORREL)
     elapsed_time.mark()
 
     df_test = None
@@ -66,7 +66,7 @@ def select_features(df: DataFrame, features, n_feats,
     else:
         _select_highvar_features(df, df_test, features, n_feats)
 
-    proghandler(100, ExtractPhase.SELECT_BEST)
+    proghandler(100, ProgressPhase.SELECT_BEST)
     return df, features
 
 

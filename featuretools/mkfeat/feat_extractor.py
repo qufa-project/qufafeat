@@ -6,7 +6,7 @@ from .columnspec import ColumnSpec
 from .opmgr import OperatorManager
 from .feathelper import FeatureHelper
 from .error import Error
-from .extract_phase import ExtractPhase
+from .progress_phase import ProgressPhase
 from .elapsed_time import ElapsedTime
 from . import featsel
 
@@ -52,14 +52,14 @@ class FeatureExtractor:
         self.es = QufaES()
         return self.es.load_from_csv(self._path_input, self._progress_report, colspec)
 
-    def _progress_report(self, prog, phase: ExtractPhase):
-        if phase == ExtractPhase.READ_CSV:
+    def _progress_report(self, prog, phase: ProgressPhase):
+        if phase == ProgressPhase.READ_CSV:
             prog = int(prog * 0.1)
-        elif phase == ExtractPhase.DFS:
+        elif phase == ProgressPhase.DFS:
             prog = int(10 + prog * 0.5)
-        elif phase == ExtractPhase.REMOVE_SINGLE:
+        elif phase == ProgressPhase.REMOVE_SINGLE:
             prog = int(60 + prog * 0.1)
-        elif phase == ExtractPhase.REMOVE_CORREL:
+        elif phase == ProgressPhase.REMOVE_CORREL:
             prog = int(70 + prog * 0.2)
         else:
             prog = int(90 + prog * 0.1)
@@ -71,7 +71,7 @@ class FeatureExtractor:
         self._prog = prog
 
     def _progress_report_dfs(self, update, progress_percent, time_elapsed):
-        self._progress_report(int(progress_percent), ExtractPhase.DFS)
+        self._progress_report(int(progress_percent), ProgressPhase.DFS)
 
     def extract_features(self, operators: list) -> Error:
         """

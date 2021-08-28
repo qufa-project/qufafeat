@@ -1,7 +1,7 @@
 import pandas as pd
 
 from .columnspec import ColumnSpec
-from .extract_phase import ExtractPhase
+from .progress_phase import ProgressPhase
 from .error import Error
 
 
@@ -23,7 +23,6 @@ class QufaCsv:
             return n_rows
 
     def load(self, callback, label_only: bool = False, exclude_label: bool = False, numeric_only: bool = False):
-        usecols = None
         colnames = self._colspec.get_colnames()
         if len(colnames) != self._guess_n_columns():
             return Error.ERR_COLUMN_COUNT_MISMATCH
@@ -37,13 +36,14 @@ class QufaCsv:
             n_rows = 0
             chunks = []
             for chunk in pd.read_csv(self._path, header=None, names=colnames, converters=self._colspec.get_converters(),
-                                    skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
-                                    true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'],
-                                    chunksize=chunk_size):
+                                     skiprows=self._skiprows, usecols=usecols, dtype=self._colspec.get_dtypes(),
+                                     true_values=['Y', 'true', 'T'], false_values=['N', 'false', 'F'],
+                                     chunksize=chunk_size):
                 chunks.append(chunk)
                 n_rows += chunk_size
                 prog = n_rows / n_total_rows * 100
-                callback(prog, ExtractPhase.READ_CSV)
+                if callback is not None:
+                    callback(prog, ProgressPhase.READ_CSV)
 
             return pd.concat(chunks)
         except ValueError:

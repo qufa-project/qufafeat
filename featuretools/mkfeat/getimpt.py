@@ -71,12 +71,12 @@ if __name__ == "__main__":
         conf_label = conf['label']
         path_label = conf_label['uri']
         columns_label = conf_label['columns']
-    impt = FeatureImportance()
-    err = impt.load(path_data, columns_data, path_label, columns_label)
+    impt = FeatureImportance(path_data, columns_data, path_label, columns_label, _handle_progress)
+    err = impt.analyze()
     if err != Error.OK:
-        logger.error("load error: {}".format(err))
+        logger.error("error: {}".format(err))
         exit(2)
-    impt.analyze(_handle_progress)
+
     print()
     print(impt.get_importance())
 
