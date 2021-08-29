@@ -60,14 +60,14 @@ class ColumnSpec:
             colnames.append(colinfo['name'])
         return colnames
 
-    def get_usecols(self, numeric_only: bool = False, label_only: bool = False, exclude_label: bool = False):
+    def get_usecols(self, numeric_only: bool = False, label_only: bool = False, exclude_skip: bool = False):
         """
         컬럼명 배열을 반환. pandas의 read_csv()의 usecols 파라미터 전달용 함수
 
         Args:
             numeric_only (bool): True의 경우, numeric 형식으로 가능한 column명 만을 추출
             label_only (bool): True의 경우 label에 대한 column명 만을 추출
-            exclude_label (bool): True의 경우 label 컬럼을 제거하여 column명 목록 생성
+            exclude_skip (bool): True의 경우 label, train, bypass 컬럼을 제거하여 column명 목록 생성
         Returns:
             컬럼명으로 구성된 배열
         """
@@ -77,7 +77,9 @@ class ColumnSpec:
                 continue
             if label_only and ('label' not in colinfo or not colinfo['label']):
                 continue
-            if exclude_label and 'label' in colinfo and colinfo['label']:
+            if exclude_skip and (('label' in colinfo and colinfo['label']) or
+                                 ('train' in colinfo and colinfo['train']) or
+                                 ('bypass' in colinfo and colinfo['bypass'])):
                 continue
             colnames.append(colinfo['name'])
         return colnames

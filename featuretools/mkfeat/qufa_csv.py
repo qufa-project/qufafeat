@@ -22,11 +22,11 @@ class QufaCsv:
                 n_rows += 1
             return n_rows
 
-    def load(self, callback, label_only: bool = False, exclude_label: bool = False, numeric_only: bool = False):
+    def load(self, callback, label_only: bool = False, exclude_skip: bool = False, numeric_only: bool = False):
         colnames = self._colspec.get_colnames()
         if len(colnames) != self._guess_n_columns():
             return Error.ERR_COLUMN_COUNT_MISMATCH
-        usecols = self._colspec.get_usecols(label_only=label_only, exclude_label=exclude_label,
+        usecols = self._colspec.get_usecols(label_only=label_only, exclude_skip=exclude_skip,
                                             numeric_only=numeric_only)
 
         n_total_rows = self.get_n_rows()

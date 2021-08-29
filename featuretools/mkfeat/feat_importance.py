@@ -50,8 +50,7 @@ class FeatureImportance:
                 return Error.ERR_LABEL_NOT_FOUND
 
         csv_data = QufaCsv(self._path_data, colspec_data)
-        exclude_label = True if self._path_label is None else False
-        data = csv_data.load(self._progress_report, exclude_label=exclude_label, numeric_only=True)
+        data = csv_data.load(self._progress_report, exclude_skip=True, numeric_only=True)
         if isinstance(data, Error):
             return data
         self.data = data
@@ -61,7 +60,7 @@ class FeatureImportance:
         else:
             colspec_label = ColumnSpec(self._columns_label)
             csv_label = QufaCsv(self._path_label, colspec_label)
-            label = csv_label.load(None)
+            label = csv_label.load(None, numeric_only=True)
         if isinstance(label, Error):
             return label
         self.label = label
@@ -84,7 +83,7 @@ class FeatureImportance:
         if err != Error.OK:
             return err
 
-        xtr, xv, ytr, yv = train_test_split(self.data.values, self.label, test_size=0.2, random_state=0)
+        xtr, xv, ytr, yv = train_test_split(self.data.values, self.label.values, test_size=0.2, random_state=0)
         dtrain = xgb.DMatrix(xtr, label=ytr)
         dvalid = xgb.DMatrix(xv, label=yv)
 
