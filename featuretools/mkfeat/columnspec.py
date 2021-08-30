@@ -19,6 +19,7 @@ class ColumnSpec:
     """
     def __init__(self, columns):
         self.columns = columns
+        self._auto_keyname = None
 
     def validate(self):
         """
@@ -44,8 +45,6 @@ class ColumnSpec:
                     if has_label:
                         return Error.ERR_COLUMN_MULTI_LABEL
                     has_label = True
-        if not has_key:
-            return Error.ERR_COLUMN_NO_KEY
         return Error.OK
 
     def get_colnames(self):
@@ -102,15 +101,19 @@ class ColumnSpec:
 
     def get_key_colname(self):
         """
-        특징 추출시 id로 지정가능한 컬럼명 반환. key로 지정된 column명이 없는 경우 첫번째 컬럼명 반환
+        Get key column name. If no key is specified, key is automatically generated.
 
         Returns:
-            id로 지정 가능한 column name.
+            key column name which can be used as row identifer.
         """
         for colinfo in self.columns:
             if 'key' in colinfo and colinfo['key']:
                 return colinfo['name']
-        return self.columns[0]['name']
+        self._setup_auto_keyname()
+        return self._auto_keyname
+
+    def is_auto_keyname(self):
+        return True if self._auto_keyname else False
 
     def get_label_colname(self):
         for colinfo in self.columns:
@@ -160,3 +163,16 @@ class ColumnSpec:
     @staticmethod
     def _is_numeric_type(self):
         return self in ('number', 'bool')
+
+    def _setup_auto_keyname(self):
+        if self._auto_keyname:
+            return
+        colnames = self.get_colnames()
+        if 'id' not in colnames:
+            keyname = 'id'
+        else:
+            for i in range(1, 100000):
+                keyname = "id_{}".format(i)
+                if keyname not in colnames:
+                    break
+        self._auto_keyname = keyname

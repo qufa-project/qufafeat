@@ -141,7 +141,8 @@ class FeatureExtractor:
         Returns:
 
         """
-        self.feature_matrix.to_csv(path)
+        need_index = False if self.es.is_auto_key() else True
+        self.feature_matrix.to_csv(path, index=need_index)
 
     def get_feature_info(self):
         """

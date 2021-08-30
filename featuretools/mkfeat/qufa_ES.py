@@ -1,4 +1,5 @@
 from featuretools.entityset import EntitySet
+import numpy as np
 
 from .columnspec import ColumnSpec
 from .error import Error
@@ -10,6 +11,7 @@ class QufaES(EntitySet):
     def __init__(self):
         super().__init__()
         self.target_entity_name = None
+        self._is_auto_key = False
         self._df_label = None
         self._df_train = None
         self._df_bypass = None
@@ -21,6 +23,9 @@ class QufaES(EntitySet):
             return data
 
         colname_key = colspec.get_key_colname()
+        if colspec.is_auto_keyname():
+            data[colname_key] = np.arange(len(data))
+            self._is_auto_key = True
         colname_label = colspec.get_label_colname()
         if colname_label:
             self._df_label = data[[colname_key, colname_label]]
@@ -52,11 +57,15 @@ class QufaES(EntitySet):
             keyname = norminfo[0]
             vars = norminfo[1:]
             etname = self._search_owner_entity(keyname)
-            self.normalize_entity(etname, "tbl_{}".format(keyname), norminfo[0], additional_variables=vars)
+            if etname:
+                self.normalize_entity(etname, "tbl_{}".format(keyname), norminfo[0], additional_variables=vars)
 
         self.target_entity_name = "main"
 
         return Error.OK
+
+    def is_auto_key(self):
+        return self._is_auto_key
 
     def get_df_label(self):
         return self._df_label
