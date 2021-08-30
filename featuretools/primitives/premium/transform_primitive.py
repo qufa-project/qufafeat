@@ -1456,12 +1456,15 @@ class LessThanPrevious(TransformPrimitive):
     input_types = [Numeric]
     return_type = Numeric
 
-    def __init__(self, fill_method = None, limit = None):
+    def __init__(self, fill_method = "pad", limit = None):
         self.fill_method = fill_method
         self.limit = limit
 
     def get_function(self):
         def less_than_previous(numbers):
+            df = pandas.DataFrame(numbers)
+            df.fillna(method = self.fill_method, limit = self.limit)
+            numbers = df[0].tolist()
             results = []
             prev = None
             for num in numbers:
