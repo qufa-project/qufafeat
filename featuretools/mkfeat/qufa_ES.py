@@ -41,7 +41,11 @@ class QufaES(EntitySet):
             colnames_bypass.remove(colname_key)
             data = data.drop(columns=colnames_bypass)
 
-        norminfos = normalize(data, colname_key)
+        try:
+            norminfos = normalize(data, colname_key)
+        except AssertionError:
+            # There are many cases. One observed case is that key index is not unique.
+            return Error.ERR_COLUMN_BAD
 
         self.entity_from_dataframe("main", data, index=colname_key)
         for norminfo in norminfos:
