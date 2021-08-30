@@ -953,7 +953,7 @@ class CountInsideRange(AggregationPrimitive):
     description_template = "count_inside_range"
     stack_on_self = False
 
-    def __init__(self, lower=0, upper=1, skipna=False):
+    def __init__(self, lower=0, upper=1, skipna=True):
         self.lower = lower
         self.upper = upper
         self.skipna = skipna
@@ -966,8 +966,7 @@ class CountInsideRange(AggregationPrimitive):
                     continue
                 elif not self.skipna and not val:
                     return np.nan
-
-                if val >= self.lower and val <= self.upper:
+                elif val >= self.lower and val <= self.upper:
                     count += 1
             return count
 
