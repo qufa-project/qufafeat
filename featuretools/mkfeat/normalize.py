@@ -12,10 +12,11 @@ def normalize(df: DataFrame, key_colname):
         for _ in range(N_ITERS):
             df_samp = df.sample(n=n_samples)
             norminfos_new = _get_norminfos(df_samp, key_colname)
-            if norminfos is None:
-                norminfos = norminfos_new
-            else:
-                _merge_norminfos(norminfos, norminfos_new)
+            if norminfos_new:
+                if norminfos is None:
+                    norminfos = norminfos_new
+                else:
+                    _merge_norminfos(norminfos, norminfos_new)
         return norminfos
     else:
         return _get_norminfos(df, key_colname)
@@ -50,7 +51,11 @@ def _clear_norminfos_upto_key(norminfos, key):
 
 
 def _get_norminfos(df: DataFrame, key_colname):
-    es = an.auto_entityset(df, index=key_colname, accuracy=accuracy)
+    try:
+        es = an.auto_entityset(df, index=key_colname, accuracy=accuracy)
+    except KeyError:
+        # Maybe autonormalize bug. It seems to have a problem in case of multi key normalization.
+        return None
 
     norminfos = []
     # 첫번째 이외의 entity들에 대해서. 첫번째 entity가 main임을 가정

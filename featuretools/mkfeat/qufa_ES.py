@@ -53,12 +53,13 @@ class QufaES(EntitySet):
             return Error.ERR_COLUMN_BAD
 
         self.entity_from_dataframe("main", data, index=colname_key)
-        for norminfo in norminfos:
-            keyname = norminfo[0]
-            vars = norminfo[1:]
-            etname = self._search_owner_entity(keyname)
-            if etname:
-                self.normalize_entity(etname, "tbl_{}".format(keyname), norminfo[0], additional_variables=vars)
+        if norminfos:
+            for norminfo in norminfos:
+                keyname = norminfo[0]
+                vars = norminfo[1:]
+                etname = self._search_owner_entity(keyname)
+                if etname:
+                    self.normalize_entity(etname, "tbl_{}".format(keyname), norminfo[0], additional_variables=vars)
 
         self.target_entity_name = "main"
 
