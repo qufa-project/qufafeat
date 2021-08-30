@@ -1292,31 +1292,23 @@ class MaxConsecutiveFalse(AggregationPrimitive):
     input_types = [Boolean]
     return_type = Numeric
 
-    def __init__(self, skipna = False):
+    def __init__(self, skipna = True):
         self.skipna = skipna
 
     def get_function(self):
         def max_consecutive_false(array):
             max_count = 0
-            count = -1
-            not_non_arr = []
+            count = 0
             for val in array:
-                if val:
-                    not_non_arr.append(val)
-                elif self.skipna and not val:
+                if self.skipna and val == None:
                     continue
-                elif not self.skipna and not val:
-                    return np.nan
-
-            for val in not_non_arr:
-                if not val and count == -1:
-                    count = 1
-                elif not val and count > 0:
+                elif not self.skipna and val == None:
+                    count = 0
+                elif val == False:
                     count += 1
-                elif val:
+                else:
                     max_count = max(max_count, count)
-                    count = -1
-            max_count = max(max_count, count)
+                    count = 0
             return max_count
 
         return max_consecutive_false
