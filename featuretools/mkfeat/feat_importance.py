@@ -45,6 +45,9 @@ class FeatureImportance:
                 return Error.ERR_LABEL_NOT_FOUND
 
         self._colspec_data = colspec_data = ColumnSpec(self._columns_data)
+        err = colspec_data.validate()
+        if err != Error.OK:
+            return err
         if self._path_label is None:
             if colspec_data.get_label_colname() is None:
                 return Error.ERR_LABEL_NOT_FOUND
@@ -59,8 +62,13 @@ class FeatureImportance:
             label = csv_data.load(None, label_only=True)
         else:
             colspec_label = ColumnSpec(self._columns_label)
+            err = colspec_label.validate()
+            if err != Error.OK:
+                return err
+            if colspec_label.get_label_colname() is None:
+                return Error.ERR_LABEL_NOT_FOUND
             csv_label = QufaCsv(self._path_label, colspec_label)
-            label = csv_label.load(None, numeric_only=True)
+            label = csv_label.load(None, label_only=True)
         if isinstance(label, Error):
             return label
         self.label = label
