@@ -71,6 +71,8 @@ class FeatureImportance:
             label = csv_label.load(None, label_only=True)
         if isinstance(label, Error):
             return label
+        if len(data) != len(label):
+            return Error.ERR_DATA_LABEL_COUNT_MISMATCH
         self.label = label
         return Error.OK
 
