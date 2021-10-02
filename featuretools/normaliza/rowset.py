@@ -3,7 +3,7 @@ from pandas import DataFrame
 
 class RowSet:
     def __init__(self, df: DataFrame):
-        self.colnames: frozenset = frozenset(df.columns)
+        self.cnset: frozenset = frozenset(df.columns)
 
         rowset_map = {}
         for row in df.iterrows():
@@ -19,7 +19,7 @@ class RowSet:
             self._rowset.add(frozenset(item))
 
     def get_desc(self):
-        return "(" + ",".join(self.colnames) + ")"
+        return "(" + ",".join(self.cnset) + ")"
 
     def __repr__(self):
         return self.get_desc() + ': ' + str(self._rowset)

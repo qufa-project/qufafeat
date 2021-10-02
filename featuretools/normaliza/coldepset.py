@@ -24,7 +24,7 @@ class ColDepSet:
             rs: RowSet = self._rsm.get(frozenset({col}))
             for n in range(1, len(cols_lhs_cand)):
                 for lhs in itertools.combinations(cols_lhs_cand, n):
-                    if self._is_skip_ok(lhs, rs.colnames):
+                    if self._is_skip_ok(lhs, rs.cnset):
                         continue
                     rs_lhs = self._rsm.get(frozenset(lhs))
                     if rs.has_dep(rs_lhs):
