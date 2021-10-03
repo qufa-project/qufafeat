@@ -39,3 +39,9 @@ class ColDepSet:
 
     def __iter__(self):
         return self._coldeps.__iter__()
+
+    def __repr__(self):
+        descs = []
+        for coldep in self._coldeps:
+            descs.append(str(coldep))
+        return "\n".join(descs)

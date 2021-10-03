@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Set
 
 
 class ColDepNode:
     def __init__(self, cnset: frozenset):
         self._cnsets = []
         self._cnsets.append(cnset)
-        self._childs = []
-        self._parent: Optional[ColDepNode] = None
+        self._childmap = []
+        self._parents: Set[ColDepNode] = set()
         self._level = 0
 
     def is_cnset(self, cnset: frozenset):
@@ -15,75 +15,80 @@ class ColDepNode:
                 return True
         return False
 
-    def get_level(self):
-        level = 1
-        parent = self._parent
-        while parent is not None:
-            level += 1
-            parent = parent.get_parent()
-        return level
-
     def add_cnset(self, cnset):
         if isinstance(cnset, list):
             self._cnsets = self._cnsets + cnset
         else:
             self._cnsets.append(cnset)
 
-    def add_child(self, child):
-        self._childs.append(child)
+    def add_child(self, cnset, child):
+        self._childmap.append([cnset, child])
         child._parent = self
 
     def remove_child(self, child):
-        self._childs.remove(child)
-        child._parent = None
+        for cinfo in self._childmap:
+            if cinfo[1] == child:
+                self._childmap.remove(cinfo)
+                child._parent = None
+                return
 
     def crop(self):
-        self._parent.remove_child(self)
+        for parent in self._parents:
+            parent.remove_child(self)
 
-    def get_parent(self):
-        return self._parent
+    def get_parents(self):
+        return self._parents
 
-    def is_ancestor(self, ancestor):
-        parent = self._parent
-        while parent is not None:
-            if ancestor == parent:
-                return True
-            parent = parent.get_parent()
-        return False
+    def get_child_lhs_cnset(self, child):
+        for cinfo in self._childmap:
+            if cinfo[1] == child:
+                return cinfo[0]
+        return None
 
-    def is_root(self):
-        if self._parent is None:
+    def has_descendent(self, child_cnset) -> bool:
+        if self.find(child_cnset) is not None:
             return True
         return False
 
-    def get_root(self):
-        node = self
-        while node._parent is not None:
-            node = node.get_parent()
-        return node
+    def is_ancestor(self, ancestor):
+        for parent in self._parents:
+            if parent == ancestor:
+                return True
+            return parent.is_ancestor(ancestor)
+        return False
 
     def find(self, cnset: frozenset):
         if self.is_cnset(cnset):
             return self
-        for child in self._childs:
-            found = child.find(cnset)
+        for cinfo in self._childmap:
+            found = cinfo[1].find(cnset)
             if found is not None:
                 return found
         return None
 
-    def _squash_with_parent(self):
-        self._parent.add_cnset(self._cnsets)
-        for child in self._childs:
-            self._parent.add_child(child)
+    def _squash_with_node(self, node):
+        node.add_cnset(self._cnsets)
+        for cinfo in self._childmap:
+            node.add_child(cinfo[0], cinfo[1])
 
-    def squash(self, ancestor):
-        if self == ancestor:
+    def squash(self, node):
+        if self == node:
             return
-        self._squash_with_parent()
-        self._parent.squash(ancestor)
+
+        for parent in self._parents:
+            if parent == node or parent.is_ancestor(node):
+                parent.remove_child(self)
+                parent.squash(node)
+            else:
+                child_lhs_cnset = parent.get_child_lhs_cnset(self)
+                parent.remove_child(self)
+                if parent not in node.get_parents():
+                    parent.add_child(child_lhs_cnset, node)
+
+        self._squash_with_node(node)
 
     def __iter__(self):
-        return self._childs.__iter__()
+        return self._childmap.__iter__()
 
     def _get_cnsets_desc(self):
         descs = []
@@ -98,9 +103,12 @@ class ColDepNode:
         traversed.append(self)
 
         child_descs = []
-        for child in self._childs:
-            for desc_child in child.get_desc(traversed).split("\n"):
-                child_descs.append(" " + desc_child)
+        for cinfo in self._childmap:
+            desc_lhs_cnset = "(" + ",".join(cinfo[0]) + ")"
+            descs_child = cinfo[1].get_desc(traversed).split("\n")
+            child_descs.append(" " + desc_lhs_cnset + "->" + descs_child.pop(0))
+            for desc_child in descs_child:
+                child_descs.append("  " + desc_child)
         if len(child_descs) == 0:
             return desc
         return desc + "\n" + "\n".join(child_descs)
