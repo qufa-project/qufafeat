@@ -40,6 +40,13 @@ class ColDepTree:
                 return node
         return None
 
+    def collapse_roots(self):
+        root_main = self._roots.pop()
+        for root in self._roots:
+            root.squash(root_main)
+        self._roots.clear()
+        self._roots.add(root_main)
+
     def __repr__(self):
         traversed = []
         root_descs = []
