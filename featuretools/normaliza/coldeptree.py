@@ -26,7 +26,7 @@ class ColDepTree:
             node_rhs = self._find_node(cnset_rhs)
             if node_rhs is None:
                 node_rhs = ColDepNode(cnset_rhs)
-                node_lhs.add_link(cnset_lhs, cnset_rhs, node_rhs)
+                node_lhs.set_link(cnset_lhs, cnset_rhs, node_rhs)
             elif node_lhs is not node_rhs:
                 if node_lhs.is_ancestor(node_rhs) or node_rhs.has_descendent(node_lhs):
                     node_lhs.squash(node_rhs)
@@ -35,7 +35,7 @@ class ColDepTree:
                 else:
                     if node_rhs in self._roots:
                         self._roots.remove(node_rhs)
-                    node_lhs.add_link(cnset_lhs, cnset_rhs, node_rhs)
+                    node_lhs.set_link(cnset_lhs, cnset_rhs, node_rhs)
 
     def _find_node(self, cnset: frozenset):
         for root in self._roots:
@@ -43,6 +43,19 @@ class ColDepTree:
             if node is not None:
                 return node
         return None
+
+    def validate(self):
+        for root in self._roots:
+            if not root.validate():
+                return False
+        return True
+
+    def get_count(self, cnset: frozenset):
+        count = 0
+        found = set()
+        for root in self._roots:
+            count += root.get_count(cnset, found)
+        return count
 
     def collapse_roots(self):
         root_main = self._roots.pop()

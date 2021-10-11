@@ -24,7 +24,7 @@ class ColDepNode:
             for c in cnset:
                 self._cnsets.add(c)
 
-    def set_parent(self, cnset_lhs, cnset_rhs, parent):
+    def add_parent(self, cnset_lhs, cnset_rhs, parent):
         link_parent = coldeplink.ColDepLink(parent, self, cnset_lhs, cnset_rhs)
         self._links_parent.add(link_parent)
 
@@ -36,9 +36,9 @@ class ColDepNode:
         link_child = coldeplink.ColDepLink(self, child, cnset_lhs, cnset_rhs)
         self._links_child.add(link_child)
 
-    def add_link(self, cnset_lhs, cnset_rhs, child):
+    def set_link(self, cnset_lhs, cnset_rhs, child):
         self.add_child(cnset_lhs, cnset_rhs, child)
-        child.set_parent(cnset_lhs, cnset_rhs, self)
+        child.add_parent(cnset_lhs, cnset_rhs, self)
 
     def remove_parent(self, cnset_lhs, cnset_rhs):
         for link_parent in self._links_parent:
@@ -68,6 +68,13 @@ class ColDepNode:
                 return True
         return False
 
+    def has_parent_link(self, link):
+        for link_parent in self._links_parent:
+            if link_parent.cnset_lhs == link.cnset_lhs and link_parent.cnset_rhs == link.cnset_rhs and\
+                    link_parent.lhs == link.lhs:
+                return True
+        return False
+
     def find(self, cnset: frozenset):
         if self.is_cnset(cnset):
             return self
@@ -77,21 +84,53 @@ class ColDepNode:
                 return found
         return None
 
+    def validate(self):
+        for link_parent in self._links_parent:
+            if link_parent.rhs != self:
+                return False
+            if not self.is_cnset(link_parent.cnset_rhs):
+                return False
+            if not link_parent.lhs.is_cnset(link_parent.cnset_lhs):
+                return False
+        for link_child in self._links_child:
+            if link_child.lhs != self:
+                return False
+            if not self.is_cnset(link_child.cnset_lhs):
+                return False
+            if not link_child.rhs.is_cnset(link_child.cnset_rhs):
+                return False
+            if not link_child.rhs.has_parent_link(link_child):
+                return False
+            if not link_child.rhs.validate():
+                return False
+        return True
+
+    def get_count(self, cnset: frozenset, found: set):
+        count = 0
+        if self not in found and self.is_cnset(cnset):
+            count = 1
+            found.add(self)
+        for link_child in self._links_child:
+            count += link_child.rhs.get_count(cnset, found)
+        return count
+
     def _squash_with_node(self, node):
         node.add_cnset(self._cnsets)
         for link_child in self._links_child:
-            node.add_link(link_child.cnset_lhs, link_child.cnset_rhs, link_child.rhs)
+            node.set_link(link_child.cnset_lhs, link_child.cnset_rhs, link_child.rhs)
 
     def squash(self, node):
         if self == node:
             return
 
-        for link_parent in self._links_parent.copy():
+        for link_parent in self._links_parent:
             link_parent.lhs.remove_child(link_parent.cnset_lhs, link_parent.cnset_rhs)
+
+        for link_parent in self._links_parent:
             if link_parent.lhs == node or link_parent.lhs.is_ancestor(node):
                 link_parent.lhs.squash(node)
             else:
-                link_parent.lhs.add_child(link_parent.cnset_lhs, link_parent.cnset_rhs, node)
+                link_parent.lhs.set_link(link_parent.cnset_lhs, link_parent.cnset_rhs, node)
 
         self._squash_with_node(node)
 
