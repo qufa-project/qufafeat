@@ -6,9 +6,13 @@ from .coldepnode import ColDepNode
 
 
 class ColDepTree:
-    def __init__(self, df: DataFrame, single_dep: bool = False):
+    def __init__(self, df: DataFrame = None, single_dep: bool = False):
         self._roots: Set[ColDepNode] = set()
-        self._build(ColDepSet(df, single_dep))
+        if df is not None:
+            self._build(ColDepSet(df, single_dep))
+
+    def add_root(self, root: ColDepNode):
+        self._roots.add(root)
 
     def _build(self, coldeps: ColDepSet):
         for coldep in coldeps:
