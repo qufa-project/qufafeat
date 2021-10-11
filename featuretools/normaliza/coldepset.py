@@ -11,13 +11,13 @@ class ColDepSet:
     """
     Column Dependency Set: Group of column dependencies
     """
-    def __init__(self, df: DataFrame):
+    def __init__(self, df: DataFrame, single_dep: bool = False):
         self._rsm: RowSetManager = RowSetManager(df)
         self._coldeps = set()
 
-        self._analyze_column_deps(df)
+        self._analyze_column_deps(df, single_dep)
 
-    def _analyze_column_deps(self, df: DataFrame):
+    def _analyze_column_deps(self, df: DataFrame, single_dep: bool):
         for col in df.columns:
             cols_lhs_cand = set(df.columns)
             cols_lhs_cand.remove(col)
@@ -30,6 +30,8 @@ class ColDepSet:
                     if rs.has_dep(rs_lhs):
                         dep = ColDep(rs_lhs, rs)
                         self._coldeps.add(dep)
+                if single_dep:
+                    break
 
     def _is_skip_ok(self, cols_lhs, col_rhs):
         for coldep in self._coldeps:
