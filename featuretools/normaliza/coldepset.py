@@ -15,7 +15,7 @@ class ColDepSet:
         self._rsm: RowSetManager = RowSetManager(df)
         self._coldeps = set()
 
-        if df:
+        if df is not None:
             self._analyze_column_deps(df, single_dep)
 
     def add(self, coldep: ColDep):

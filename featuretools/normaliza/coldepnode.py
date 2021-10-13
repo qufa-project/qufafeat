@@ -1,15 +1,20 @@
 from typing import Set
+from typing import Optional
 
 import featuretools.normaliza.coldeplink as coldeplink
 
 
 class ColDepNode:
-    def __init__(self, cnset: frozenset):
+    def __init__(self, cnset: Optional[frozenset]):
         self._cnsets = set()
-        self._cnsets.add(cnset)
+        if cnset is not None:
+            self._cnsets.add(cnset)
         self._links_child: Set[coldeplink.ColDepLink] = set()
         self._links_parent: Set[coldeplink.ColDepLink] = set()
         self._level = 0
+
+    def is_invalid(self):
+        return self._cnsets is None
 
     def is_cnset(self, cnset: frozenset):
         for cnset_my in self._cnsets:
@@ -24,33 +29,40 @@ class ColDepNode:
             for c in cnset:
                 self._cnsets.add(c)
 
-    def add_parent(self, cnset_lhs, cnset_rhs, parent):
-        link_parent = coldeplink.ColDepLink(parent, self, cnset_lhs, cnset_rhs)
-        self._links_parent.add(link_parent)
+    def add_link_parent(self, link):
+        if len(self._links_parent) == 1:
+            for link_parent in self._links_parent:
+                if not link_parent.cnset_lhs:
+                    link_parent.lhs.remove_link(link_parent)
+                    break
+        self._links_parent.add(link)
 
-    def add_child(self, cnset_lhs, cnset_rhs, child):
-        for link_child in self._links_child:
-            if link_child.cnset_lhs == cnset_lhs and link_child.cnset_rhs == cnset_rhs:
-                return
+    def add_link_child(self, link):
+        self._links_child.add(link)
 
-        link_child = coldeplink.ColDepLink(self, child, cnset_lhs, cnset_rhs)
-        self._links_child.add(link_child)
+    def add_link(self, link):
+        self.add_link_child(link)
+        link.rhs.add_link_parent(link)
 
-    def set_link(self, cnset_lhs, cnset_rhs, child):
-        self.add_child(cnset_lhs, cnset_rhs, child)
-        child.add_parent(cnset_lhs, cnset_rhs, self)
+    def append_link(self, cnset_lhs, cnset_rhs, child):
+        link = coldeplink.ColDepLink(self, child, cnset_lhs, cnset_rhs)
+        self.add_link(link)
 
-    def remove_parent(self, cnset_lhs, cnset_rhs):
-        for link_parent in self._links_parent:
-            if link_parent.cnset_lhs == cnset_lhs and link_parent.cnset_rhs == cnset_rhs:
-                self._links_parent.remove(link_parent)
-                return
+    def remove_link_parent(self, link, force: bool = False):
+        if not force or link in self._links_parent:
+            self._links_parent.remove(link)
 
-    def remove_child(self, cnset_lhs, cnset_rhs):
-        for link_child in self._links_child:
-            if link_child.cnset_lhs == cnset_lhs and link_child.cnset_rhs == cnset_rhs:
-                self._links_child.remove(link_child)
-                return
+    def remove_link_child(self, link, force: bool = False):
+        if not force or link in self._links_child:
+            self._links_child.remove(link)
+
+    def remove_link(self, link, force: bool = False):
+        self.remove_link_child(link, force)
+        link.rhs.remove_link_parent(link, force)
+
+    def set_link(self, link):
+        self.remove_link(link, True)
+        self.add_link(link)
 
     def has_descendent(self, node) -> bool:
         for link_child in self._links_child:
@@ -69,11 +81,7 @@ class ColDepNode:
         return False
 
     def has_parent_link(self, link):
-        for link_parent in self._links_parent:
-            if link_parent.cnset_lhs == link.cnset_lhs and link_parent.cnset_rhs == link.cnset_rhs and\
-                    link_parent.lhs == link.lhs:
-                return True
-        return False
+        return link in self._links_parent
 
     def find(self, cnset: frozenset):
         if self.is_cnset(cnset):
@@ -84,15 +92,28 @@ class ColDepNode:
                 return found
         return None
 
-    def validate(self):
+    def validate(self, map_cnset: map = None):
+        if self.is_invalid():
+            return False
+        if map_cnset:
+            for cnset in self._cnsets:
+                if cnset in map_cnset:
+                    if map_cnset[cnset] != self:
+                        return False
+                else:
+                    map_cnset[cnset] = self
         for link_parent in self._links_parent:
+            if link_parent.is_invalid():
+                return False
             if link_parent.rhs != self:
                 return False
-            if not self.is_cnset(link_parent.cnset_rhs):
+            if link_parent.cnset_rhs and not self.is_cnset(link_parent.cnset_rhs):
                 return False
-            if not link_parent.lhs.is_cnset(link_parent.cnset_lhs):
+            if link_parent.cnset_lhs and not link_parent.lhs.is_cnset(link_parent.cnset_lhs):
                 return False
         for link_child in self._links_child:
+            if link_child.is_invalid():
+                return False
             if link_child.lhs != self:
                 return False
             if not self.is_cnset(link_child.cnset_lhs):
@@ -101,7 +122,7 @@ class ColDepNode:
                 return False
             if not link_child.rhs.has_parent_link(link_child):
                 return False
-            if not link_child.rhs.validate():
+            if not link_child.rhs.validate(map_cnset):
                 return False
         return True
 
@@ -117,42 +138,59 @@ class ColDepNode:
     def _squash_with_node(self, node):
         node.add_cnset(self._cnsets)
         for link_child in self._links_child:
-            node.set_link(link_child.cnset_lhs, link_child.cnset_rhs, link_child.rhs)
+            if not link_child.rhs.is_invalid() and node is not link_child.rhs:
+                link_new = coldeplink.ColDepLink(node, link_child.rhs, link_child.cnset_lhs, link_child.cnset_rhs)
+                node.set_link(link_new)
 
     def squash(self, node):
         if self == node:
             return
 
+        parents = set()
         for link_parent in self._links_parent:
-            link_parent.lhs.remove_child(link_parent.cnset_lhs, link_parent.cnset_rhs)
-
-        for link_parent in self._links_parent:
+            link_parent.lhs.remove_link_child(link_parent)
             if link_parent.lhs == node or link_parent.lhs.is_ancestor(node):
-                link_parent.lhs.squash(node)
+                parents.add(link_parent.lhs)
             else:
-                link_parent.lhs.set_link(link_parent.cnset_lhs, link_parent.cnset_rhs, node)
+                link_parent.lhs.append_link(link_parent.cnset_lhs, link_parent.cnset_rhs, node)
+
+        for parent in parents:
+            if not parent.is_invalid():
+                parent.squash(node)
 
         self._squash_with_node(node)
+        # invalidate myself
+        self._cnsets = None
+
+    def __next__(self):
+        link = self._iter.__next__()
+        return link.rhs
 
     def __iter__(self):
-        return self._links_child.__iter__()
+        self._iter = self._links_child.__iter__()
+        return self
 
     def _get_cnsets_desc(self):
+        if self._cnsets is None:
+            return "(!invalid!)"
         descs = []
         for cnset in self._cnsets:
             descs.append("(" + ",".join(cnset) + ")")
         return "|".join(descs)
 
-    def get_desc(self, traversed: list):
+    def get_desc(self, traversed: list, recursive: bool):
         desc = self._get_cnsets_desc()
         if self in traversed:
             return "@" + desc
         traversed.append(self)
 
+        if not recursive:
+            return desc
+
         child_descs = []
-        for link_child in self:
+        for link_child in self._links_child:
             child_descs.append(" " + str(link_child))
-            descs_child = link_child.rhs.get_desc(traversed).split("\n")
+            descs_child = link_child.rhs.get_desc(traversed, recursive).split("\n")
             for desc_child in descs_child:
                 child_descs.append("  " + desc_child)
         if len(child_descs) == 0:
@@ -160,4 +198,4 @@ class ColDepNode:
         return desc + "\n" + "\n".join(child_descs)
 
     def __repr__(self):
-        return self.get_desc([])
+        return self.get_desc([], False)
