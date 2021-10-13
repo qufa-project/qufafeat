@@ -9,12 +9,12 @@ class ColDepTree:
     def __init__(self, df: DataFrame = None, single_dep: bool = False):
         self._roots: Set[ColDepNode] = set()
         if df is not None:
-            self._build(ColDepSet(df, single_dep))
+            self.build(ColDepSet(df, single_dep))
 
     def add_root(self, root: ColDepNode):
         self._roots.add(root)
 
-    def _build(self, coldeps: ColDepSet):
+    def build(self, coldeps: ColDepSet):
         for coldep in coldeps:
             cnset_lhs = coldep.get_lhs_cnset()
             node_lhs = self._find_node(cnset_lhs)

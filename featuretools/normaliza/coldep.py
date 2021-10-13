@@ -2,20 +2,22 @@ from .rowset import RowSet
 
 
 class ColDep:
-    def __init__(self, lhs: RowSet, rhs: RowSet):
-        self._lhs = lhs
-        self._rhs = rhs
+    def __init__(self, cnset_lhs: frozenset, cnset_rhs: frozenset):
+        self._cnset_lhs = cnset_lhs
+        self._cnset_rhs = cnset_rhs
 
     def __repr__(self):
-        return self._lhs.get_desc() + ' -> ' + self._rhs.get_desc()
+        desc_cnset_lhs = "(" + ",".join(self._cnset_lhs) + ")"
+        desc_cnset_rhs = "(" + ",".join(self._cnset_rhs) + ")"
+        return desc_cnset_lhs + ' -> ' + desc_cnset_rhs
 
     def get_lhs_cnset(self):
-        return self._lhs.cnset
+        return self._cnset_lhs
 
     def get_rhs_cnset(self):
-        return self._rhs.cnset
+        return self._cnset_rhs
 
-    def is_wide_dep(self, cols_lhs: frozenset, col_rhs: frozenset):
-        if self._lhs.cnset.issubset(cols_lhs) and self._rhs.cnset == col_rhs:
+    def is_wide_dep(self, cnset_lhs: frozenset, cnset_rhs: frozenset):
+        if self._cnset_lhs.issubset(cnset_lhs) and self._cnset_rhs == cnset_rhs:
             return True
         return False

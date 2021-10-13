@@ -11,24 +11,30 @@ class ColDepSet:
     """
     Column Dependency Set: Group of column dependencies
     """
-    def __init__(self, df: DataFrame, single_dep: bool = False):
+    def __init__(self, df: DataFrame = None, single_dep: bool = False):
         self._rsm: RowSetManager = RowSetManager(df)
         self._coldeps = set()
 
-        self._analyze_column_deps(df, single_dep)
+        if df:
+            self._analyze_column_deps(df, single_dep)
+
+    def add(self, coldep: ColDep):
+        self._coldeps.add(coldep)
 
     def _analyze_column_deps(self, df: DataFrame, single_dep: bool):
         for col in df.columns:
             cols_lhs_cand = set(df.columns)
             cols_lhs_cand.remove(col)
-            rs: RowSet = self._rsm.get(frozenset({col}))
+            cnset_rs = frozenset({col})
+            rs: RowSet = self._rsm.get(cnset_rs)
             for n in range(1, len(cols_lhs_cand)):
                 for lhs in itertools.combinations(cols_lhs_cand, n):
                     if self._is_skip_ok(lhs, rs.cnset):
                         continue
-                    rs_lhs = self._rsm.get(frozenset(lhs))
+                    cnset_lhs = frozenset(lhs)
+                    rs_lhs = self._rsm.get(cnset_lhs)
                     if rs.has_dep(rs_lhs):
-                        dep = ColDep(rs_lhs, rs)
+                        dep = ColDep(cnset_lhs, cnset_rs)
                         self._coldeps.add(dep)
                 if single_dep:
                     break
