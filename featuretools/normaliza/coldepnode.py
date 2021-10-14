@@ -13,6 +13,11 @@ class ColDepNode:
         self._links_parent: Set[coldeplink.ColDepLink] = set()
         self._level = 0
 
+    def is_vroot(self):
+        if self._cnsets:
+            return False
+        return True
+
     def is_invalid(self):
         return self._cnsets is None
 
@@ -135,7 +140,7 @@ class ColDepNode:
             count += link_child.rhs.get_count(cnset, found)
         return count
 
-    def _squash_with_node(self, node):
+    def collapse(self, node):
         node.add_cnset(self._cnsets)
         for link_child in self._links_child:
             if not link_child.rhs.is_invalid() and node is not link_child.rhs:
@@ -158,17 +163,13 @@ class ColDepNode:
             if not parent.is_invalid():
                 parent.squash(node)
 
-        self._squash_with_node(node)
+        self.collapse(node)
         # invalidate myself
         self._cnsets = None
 
-    def __next__(self):
-        link = self._iter.__next__()
-        return link.rhs
-
     def __iter__(self):
-        self._iter = self._links_child.__iter__()
-        return self
+        from .iterchild import IteratorChild
+        return IteratorChild(self._links_child)
 
     def _get_cnsets_desc(self):
         if self._cnsets is None:

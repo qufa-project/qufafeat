@@ -55,16 +55,23 @@ class ColDepTree:
 
     def collapse_roots(self):
         root_main = None
+        root_squashed = []
         for root in self._root:
             if root_main is None:
                 root_main = root
             else:
-                root.squash(root_main)
+                root_squashed.append(root)
+        for root in root_squashed:
+            root.collapse(root_main)
         self._root = root_main
 
     def __repr__(self):
         traversed = []
-        root_descs = []
-        for root in self._root:
-            root_descs.append(root.get_desc(traversed, True))
-        return "\n".join(root_descs)
+
+        if self._root.is_vroot():
+            root_descs = []
+            for root in self._root:
+                root_descs.append(root.get_desc(traversed, True))
+            return "\n".join(root_descs)
+        else:
+            return self._root.get_desc(traversed, True)
