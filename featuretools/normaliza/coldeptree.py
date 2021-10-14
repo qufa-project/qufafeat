@@ -65,6 +65,16 @@ class ColDepTree:
             root.collapse(root_main)
         self._root = root_main
 
+    def make_single_parent(self):
+        """
+            make tree where all nodes have a single parent. A shorter path will be removed.
+        """
+        if self._root.is_vroot():
+            for root in self._roots:
+                root.make_single_parent()
+        else:
+            self._root.make_single_parent()
+
     def __repr__(self):
         traversed = []
 

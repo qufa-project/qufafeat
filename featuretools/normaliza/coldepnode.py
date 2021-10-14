@@ -88,6 +88,14 @@ class ColDepNode:
     def has_parent_link(self, link):
         return link in self._links_parent
 
+    def get_depth(self):
+        depth = 1
+        for link_parent in self._links_parent:
+            depth_parent = link_parent.lhs.get_depth()
+            if depth_parent > depth:
+                depth = depth_parent
+        return depth
+
     def find(self, cnset: frozenset):
         if self.is_cnset(cnset):
             return self
@@ -166,6 +174,27 @@ class ColDepNode:
         self.collapse(node)
         # invalidate myself
         self._cnsets = None
+
+    def make_single_parent(self):
+        for link_child in self._links_child.copy():
+            link_child.rhs.make_single_parent()
+
+        if len(self._links_parent) > 1:
+            depth = 0
+            link_single = None
+            for link_parent in self._links_parent:
+                if link_single is None:
+                    link_single = link_parent
+                    depth = link_parent.lhs.get_depth()
+                else:
+                    depth_parent = link_parent.lhs.get_depth()
+                    if depth_parent > depth:
+                        depth = depth_parent
+                        link_single = link_parent
+
+            for link_parent in self._links_parent.copy():
+                if link_parent != link_single:
+                    link_parent.lhs.remove_link(link_parent)
 
     def __iter__(self):
         from .iterchild import IteratorChild
