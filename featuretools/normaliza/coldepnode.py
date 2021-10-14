@@ -69,6 +69,27 @@ class ColDepNode:
         self.remove_link(link, True)
         self.add_link(link)
 
+    def _has_cn(self, cn):
+        for cnset in self._cnsets:
+            if cn in cnset:
+                return True
+        return False
+
+    def _has_cnset(self, cnset):
+        for cn in cnset:
+            if not self._has_cn(cn):
+                return False
+        return True
+
+    def has_cnsets(self, cnsets):
+        for cnset in cnsets:
+            if not self._has_cnset(cnset):
+                return False
+        return True
+
+    def is_subsumed(self, nd):
+        return nd.has_cnsets(self._cnsets)
+
     def has_descendent(self, node) -> bool:
         for link_child in self._links_child:
             if link_child.rhs == node:
@@ -195,6 +216,12 @@ class ColDepNode:
             for link_parent in self._links_parent.copy():
                 if link_parent != link_single:
                     link_parent.lhs.remove_link(link_parent)
+
+    def subsumes_children(self):
+        for link_child in self._links_child.copy():
+            link_child.rhs.subsumes_children()
+            if link_child.rhs.is_subsumed(self):
+                link_child.rhs.squash(self)
 
     def __iter__(self):
         from .iterchild import IteratorChild

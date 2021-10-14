@@ -75,6 +75,16 @@ class ColDepTree:
         else:
             self._root.make_single_parent()
 
+    def subsumes_children(self):
+        """
+            simplify tree by reducing the child node which is subsumed by a parent node
+        """
+        if self._root.is_vroot():
+            for root in self._roots:
+                root.subsumes_children()
+        else:
+            self._root.subsumes_children()
+
     def __repr__(self):
         traversed = []
 
