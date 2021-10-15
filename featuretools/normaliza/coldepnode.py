@@ -2,6 +2,7 @@ from typing import Set
 from typing import Optional
 
 import featuretools.normaliza.coldeplink as coldeplink
+from .norminfo import NormInfo
 
 
 class ColDepNode:
@@ -222,6 +223,28 @@ class ColDepNode:
             link_child.rhs.subsumes_children()
             if link_child.rhs.is_subsumed(self):
                 link_child.rhs.squash(self)
+
+    def _get_flat_cnset(self):
+        cnset = set()
+        for cnset_my in self._cnsets:
+            for cn in cnset_my:
+                cnset.add(cn)
+        return cnset
+
+    def get_merged_cnset(self):
+        cnset = self._get_flat_cnset()
+        for child in self:
+            cnset = cnset.union(child.get_merged_cnset())
+        return cnset
+
+    def get_norminfos(self, idx, norminfos):
+        cnset = self.get_merged_cnset()
+        for link_parent in self._links_parent:
+            norminfos.append(NormInfo(frozenset(cnset), idx, link_parent.cnset_lhs))
+            break
+        idx += 1
+        for child in self:
+            child.get_norminfos(idx, norminfos)
 
     def __iter__(self):
         from .iterchild import IteratorChild

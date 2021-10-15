@@ -85,6 +85,12 @@ class ColDepTree:
         else:
             self._root.subsumes_children()
 
+    def get_norminfos(self):
+        norminfos = []
+        for child in self._root:
+            child.get_norminfos(0, norminfos)
+        return norminfos
+
     def __repr__(self):
         traversed = []
 
