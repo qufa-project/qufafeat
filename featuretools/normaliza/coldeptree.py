@@ -63,14 +63,15 @@ class ColDepTree:
                 root_squashed.append(root)
         for root in root_squashed:
             root.collapse(root_main)
-        self._root = root_main
+        if root_main:
+            self._root = root_main
 
     def make_single_parent(self):
         """
             make tree where all nodes have a single parent. A shorter path will be removed.
         """
         if self._root.is_vroot():
-            for root in self._roots:
+            for root in self._root:
                 root.make_single_parent()
         else:
             self._root.make_single_parent()
@@ -80,7 +81,7 @@ class ColDepTree:
             simplify tree by reducing the child node which is subsumed by a parent node
         """
         if self._root.is_vroot():
-            for root in self._roots:
+            for root in self._root:
                 root.subsumes_children()
         else:
             self._root.subsumes_children()
