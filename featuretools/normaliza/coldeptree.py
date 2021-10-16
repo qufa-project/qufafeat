@@ -5,10 +5,8 @@ from .coldepnode import ColDepNode
 
 
 class ColDepTree:
-    def __init__(self, df: DataFrame = None, single_dep: bool = False):
+    def __init__(self):
         self._root: ColDepNode = ColDepNode(None)
-        if df is not None:
-            self.build(ColDepSet(df, single_dep))
 
     def add_root(self, cnset: frozenset, root: ColDepNode):
         self._root.append_link(frozenset(), cnset, root)
