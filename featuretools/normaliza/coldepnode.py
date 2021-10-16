@@ -111,12 +111,12 @@ class ColDepNode:
         return link in self._links_parent
 
     def get_depth(self):
-        depth = 1
+        depth = 0
         for link_parent in self._links_parent:
             depth_parent = link_parent.lhs.get_depth()
             if depth_parent > depth:
                 depth = depth_parent
-        return depth
+        return depth + 1
 
     def find(self, cnset: frozenset):
         if self.is_cnset(cnset):
@@ -210,7 +210,7 @@ class ColDepNode:
                     depth = link_parent.lhs.get_depth()
                 else:
                     depth_parent = link_parent.lhs.get_depth()
-                    if depth_parent > depth:
+                    if depth_parent > depth or (depth_parent == depth and link_parent.is_prior(link_single)):
                         depth = depth_parent
                         link_single = link_parent
 

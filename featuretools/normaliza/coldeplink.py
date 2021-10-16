@@ -18,6 +18,9 @@ class ColDepLink:
             return True
         return False
 
+    def is_prior(self, link):
+        return sorted(self.cnset_lhs) > sorted(link.cnset_lhs)
+
     def __repr__(self):
         return "(" + ",".join(self.cnset_lhs) + ")->" + "(" + ",".join(self.cnset_rhs) + ")"
 
