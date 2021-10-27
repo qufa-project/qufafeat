@@ -4,7 +4,8 @@ import numpy as np
 from .columnspec import ColumnSpec
 from .error import Error
 from .qufa_csv import QufaCsv
-from .normalize import normalize
+
+import featuretools.normaliza.normaliza as normaliza
 
 
 class QufaES(EntitySet):
@@ -47,19 +48,21 @@ class QufaES(EntitySet):
             data = data.drop(columns=colnames_bypass)
 
         try:
-            norminfos = normalize(data, colname_key)
+            data_norm = data.drop(columns=[colname_key])
+            norminfos = normaliza.get_norminfos_for_es(data_norm)
         except AssertionError:
             # There are many cases. One observed case is that key index is not unique.
             return Error.ERR_COLUMN_BAD
 
         self.entity_from_dataframe("main", data, index=colname_key)
         if norminfos:
+            idx = 1
             for norminfo in norminfos:
-                keyname = norminfo[0]
-                vars = norminfo[1:]
+                keyname = norminfo.get_key()
+                vars = norminfo.get_additional_vars()
                 etname = self._search_owner_entity(keyname)
-                if etname:
-                    self.normalize_entity(etname, "tbl_{}".format(keyname), norminfo[0], additional_variables=vars)
+                self.normalize_entity(etname, "tbl_{}_{}".format(keyname, idx), keyname, additional_variables=vars)
+                idx += 1
 
         self.target_entity_name = "main"
 
@@ -84,4 +87,3 @@ class QufaES(EntitySet):
                     return et.id
         # Never happen
         return None
-
