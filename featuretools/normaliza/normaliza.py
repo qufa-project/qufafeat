@@ -15,6 +15,7 @@ def get_norminfos_for_es(df: DataFrame) -> List[NormInfo]:
     tree.build(coldeps)
     tree.collapse_roots()
     tree.make_single_parent()
+    tree.make_single_child()
     tree.subsumes_children()
     return tree.get_norminfos()
 

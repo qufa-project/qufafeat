@@ -201,7 +201,7 @@ class ColDepNode:
         for link_child in self._links_child.copy():
             link_child.rhs.make_single_parent()
 
-        if len(self._links_parent) > 1:
+        while len(self._links_parent) > 1:
             depth = 0
             link_single = None
             for link_parent in self._links_parent:
@@ -217,6 +217,33 @@ class ColDepNode:
             for link_parent in self._links_parent.copy():
                 if link_parent != link_single:
                     link_parent.lhs.remove_link(link_parent)
+
+    def _get_squashable_children(self):
+        for cnset in self._cnsets:
+            for cn in cnset:
+                squashable_links = []
+                for link_child in self._links_child:
+                    if {cn} == link_child.cnset_lhs:
+                        squashable_links.append(link_child)
+                        if len(squashable_links) == 2:
+                            return squashable_links
+        return None
+
+    def make_single_child(self):
+        while True:
+            squashable_links = self._get_squashable_children()
+            if squashable_links is None:
+                return
+            if squashable_links[0].rhs == squashable_links[1].rhs:
+                if squashable_links[0].is_prior(squashable_links[1]):
+                    self.remove_link(squashable_links[1])
+                else:
+                    self.remove_link(squashable_links[0])
+            else:
+                squashable_links[0].rhs.squash(squashable_links[1].rhs)
+
+        for link_child in self._links_child.copy():
+            link_child.rhs.make_single_child()
 
     def subsumes_children(self):
         for link_child in self._links_child.copy():
@@ -237,14 +264,14 @@ class ColDepNode:
             cnset = cnset.union(child.get_merged_cnset())
         return cnset
 
-    def get_norminfos(self, idx, norminfos):
+    def get_norminfos(self, idx_parent, norminfos):
         cnset = self.get_merged_cnset()
         for link_parent in self._links_parent:
-            norminfos.append(NormInfo(frozenset(cnset), idx, link_parent.cnset_lhs))
+            norminfos.append(NormInfo(frozenset(cnset), idx_parent, link_parent.cnset_lhs))
             break
-        idx += 1
+        idx_my = len(norminfos)
         for child in self:
-            child.get_norminfos(idx, norminfos)
+            child.get_norminfos(idx_my, norminfos)
 
     def __iter__(self):
         from .iterchild import IteratorChild

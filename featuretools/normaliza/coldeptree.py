@@ -74,6 +74,16 @@ class ColDepTree:
         else:
             self._root.make_single_parent()
 
+    def make_single_child(self):
+        """
+            make tree where all nodes have a single child.
+        """
+        if self._root.is_vroot():
+            for root in self._root:
+                root.make_single_child()
+        else:
+            self._root.make_single_child()
+
     def subsumes_children(self):
         """
             simplify tree by reducing the child node which is subsumed by a parent node
