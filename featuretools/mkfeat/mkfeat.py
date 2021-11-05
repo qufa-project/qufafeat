@@ -26,10 +26,36 @@ def load_conf(path_conf: str):
         if 'uri' not in conf['data']:
             logger.error("configuration does not have uri in data")
             exit(2)
-        if 'columns' not in conf['data']:
+        if 'columns' not in conf['data'] and 'columns_default' not in conf['data']:
             logger.error("configuration does not have columns in data")
             exit(2)
         return conf
+
+
+def _get_columninfo_from_columns_default(colname, columns_default):
+    for ci in columns_default:
+        if ci["name"] == colname:
+            return ci
+    return None
+
+
+def _build_columns_from_csv(path_input: str, columns_default: list):
+    import pandas as pd
+    columns = []
+
+    data = pd.read_csv(path_input, nrows=1)
+    type_default = "string"
+    ci_def = _get_columninfo_from_columns_default('*', columns_default)
+    if ci_def:
+        type_default = ci_def['type']
+
+    for colname in data.columns:
+        ci = _get_columninfo_from_columns_default(colname, columns_default)
+        if ci:
+            columns.append(ci)
+        else:
+            columns.append({"name": colname, "type": type_default})
+    return columns
 
 
 def handle_progress(prog: int):
@@ -55,7 +81,10 @@ if __name__ == "__main__":
     conf = load_conf(sys.argv[1])
 
     path_input = conf['data']['uri']
-    columns = conf['data']['columns']
+    if 'columns' in conf['data']:
+        columns = conf['data']['columns']
+    else:
+        columns = _build_columns_from_csv(path_input, conf['data']['columns_default'])
     if not os.path.exists(path_input):
         logger.error("input path does not exist: {}".format(path_input))
         exit(1)
