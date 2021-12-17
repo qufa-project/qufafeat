@@ -21,7 +21,7 @@ class FeatureExtractor:
 
         Args:
             path_input: CSV 형식의 데이터 테이블 입력 파일 경로. CSV는 헤더가 있거나 없을 수 있음
-            columns: 데이터 테이블의 컬럼들에 대한 정보. 서비스에 맞게 추후 개발 필요. 현재는 활용되고 있지 않으나, 추후 활용 필요
+            columns: 데이터 테이블의 컬럼들에 대한 정보
             proghandler: 특징 추출 작업시 진행율을 전달 받는 callback 함수. proghandler(prog: int) 형태. 0에서 100사이의 값으로
                 작업이 진행될 때 마다 증가. 100의 경우 작업 완료를 의미함
         """
@@ -107,7 +107,7 @@ class FeatureExtractor:
                                                                 self._elapsed_time)
         self._elapsed_time.mark()
 
-        self.feature_helper = FeatureHelper(features)
+        self.feature_helper = FeatureHelper(features, ColumnSpec(self._columns))
         df_bypass = self.es.get_df_bypass()
         if df_bypass is not None:
             self.feature_matrix = self.feature_matrix.join(df_bypass)

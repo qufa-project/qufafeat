@@ -47,6 +47,12 @@ class ColumnSpec:
                     has_label = True
         return Error.OK
 
+    def has_colname(self, name):
+        for colinfo in self.columns:
+            if colinfo['name'] == name:
+                return True
+        return False
+
     def get_colnames(self):
         """
         컬럼명 배열을 반환. pandas의 read_csv() 함수 전달 인자를 쉽게 생성하기 위함

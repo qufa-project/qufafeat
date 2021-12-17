@@ -54,7 +54,7 @@ class QufaES(EntitySet):
             # There are many cases. One observed case is that key index is not unique.
             return Error.ERR_COLUMN_BAD
 
-        self.entity_from_dataframe("main", data, index=colname_key)
+        self.entity_from_dataframe("tbl_main_0", data, index=colname_key)
         if norminfos:
             idx = 1
             for norminfo in norminfos:
@@ -64,7 +64,7 @@ class QufaES(EntitySet):
                 self.normalize_entity(etname, "tbl_{}_{}".format(keyname, idx), keyname, additional_variables=vars)
                 idx += 1
 
-        self.target_entity_name = "main"
+        self.target_entity_name = "tbl_main_0"
 
         return Error.OK
 
