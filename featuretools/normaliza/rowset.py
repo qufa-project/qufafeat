@@ -26,12 +26,12 @@ class RowSet:
 
     def issubset(self, rg):
         for rg_in_rs in self._rowset:
-            if rg_in_rs.issubset(rg):
+            if rg.issubset(rg_in_rs):
                 return True
         return False
 
     def has_dep(self, rs):
-        for rg in self._rowset:
-            if not rs.issubset(rg):
+        for rg in rs._rowset:
+            if not self.issubset(rg):
                 return False
         return True
