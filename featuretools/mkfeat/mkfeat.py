@@ -2,9 +2,13 @@
 
 import sys
 import os
-from os.path import dirname
-import logger
 import json
+from os.path import dirname
+
+if __package__ is None:
+    import logger
+else:
+    from . import logger
 
 
 def usage():
