@@ -69,6 +69,9 @@ def handle_progress(prog: int):
 if __name__ == "__main__":
     logger.init("mkfeat")
 
+    import warnings
+    warnings.filterwarnings("ignore")
+
     topdir = dirname(dirname(dirname(__file__)))
     sys.path.insert(0, topdir)
     from featuretools.mkfeat.feat_extractor import FeatureExtractor
