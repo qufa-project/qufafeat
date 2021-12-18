@@ -1,0 +1,9 @@
+{
+    "data": {
+	"uri": "heart_risk_5k.csv",
+	"columns_default": [
+		{ "name": "*", "type": "number" },
+		{ "name": "heart_risk10", "type": "number" , "label": true }
+	]
+    }
+}

@@ -49,6 +49,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+/unpacked_sdist/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -138,3 +139,6 @@ ENV/
 /*.csv
 /*.json
 *~
+
+#docker
+/docker/*.tar.gz

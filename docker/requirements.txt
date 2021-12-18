@@ -1,0 +1,11 @@
+xgboost>=1.4.2
+scipy
+numpy
+sklearn
+pandas
+tqdm
+pyyaml
+pyzipcode
+phone_iso3166
+nltk
+haversine

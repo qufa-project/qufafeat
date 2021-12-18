@@ -1,0 +1,16 @@
+{
+	"path_output": "heart_risk_5k_mkfeat.csv",
+	"data": {
+		"uri": "heart_risk_5k.csv",
+		"columns": [
+		{ "name": "heart_risk10", "type": "number", "label": true },
+		{ "name": "age", "type": "number" },
+		{ "name": "sex", "type": "number" },
+		{ "name": "htn", "type": "number" },
+		{ "name": "fhtnyn", "type": "number" },
+		{ "name": "packyear", "type": "number" },
+		{ "name": "sd_idr2", "type": "number" }
+		]
+	},
+	"operators": [ ]
+}
