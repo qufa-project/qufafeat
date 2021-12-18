@@ -50,12 +50,23 @@ def _get_columninfo_from_columns_default(colname, columns_default):
     return None
 
 
+def _get_coltype_from_dt(dt):
+    _dtype_to_coltype = {
+        "bool": "bool",
+        "int64": "number"
+    }
+    dtstr = str(dt)
+    if dtstr in _dtype_to_coltype:
+        return _dtype_to_coltype[dtstr]
+    return None
+
+
 def _build_columns_from_csv(path_input: str, columns_default: list):
     import pandas as pd
     columns = []
 
-    data = pd.read_csv(path_input, nrows=1)
-    type_default = "string"
+    data = pd.read_csv(path_input)
+    type_default = None
     ci_def = _get_columninfo_from_columns_default('*', columns_default)
     if ci_def:
         type_default = ci_def['type']
@@ -65,7 +76,10 @@ def _build_columns_from_csv(path_input: str, columns_default: list):
         if ci:
             columns.append(ci)
         else:
-            columns.append({"name": colname, "type": type_default})
+            coltype = _get_coltype_from_dt(data.dtypes[colname])
+            if not coltype:
+                coltype = type_default
+            columns.append({"name": colname, "type": coltype})
     return columns
 
 
