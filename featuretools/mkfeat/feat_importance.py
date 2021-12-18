@@ -104,8 +104,8 @@ class FeatureImportance:
             'colsample_bytree': 0.4, 'max_depth': 9,
             'subsample': 1.0, 'lambda': 57.93,
             'booster': 'gbtree', 'gamma': 0.5,
-            'silent': 1, 'eval_metric': 'rmse',
-            'objective': 'reg:linear',
+            'verbosity': 0, 'eval_metric': 'rmse',
+            'objective': 'reg:squarederror'
         }
 
         callback = TrainCallback(self._progress_report, self.n_epochs)
