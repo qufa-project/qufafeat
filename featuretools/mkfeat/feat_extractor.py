@@ -102,7 +102,10 @@ class FeatureExtractor:
         self._elapsed_time.mark()
         df_label = self.es.get_df_label()
         df_train = self.es.get_df_train()
-        self.feature_matrix, features = featsel.select_features(feature_matrix, features, int(len(self._columns) * 2.5),
+        n_feats = int(len(self._columns) * 2.5)
+        if n_feats > 15:
+            n_feats = 15
+        self.feature_matrix, features = featsel.select_features(feature_matrix, features, n_feats,
                                                                 df_label, df_train, self._progress_report,
                                                                 self._elapsed_time)
         self._elapsed_time.mark()
