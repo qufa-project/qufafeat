@@ -41,6 +41,8 @@ class QufaCsv:
                                      chunksize=chunk_size):
                 chunks.append(chunk)
                 n_rows += chunk_size
+                if n_rows > n_total_rows:
+                    n_rows = n_total_rows
                 prog = n_rows / n_total_rows * 100
                 if callback is not None:
                     callback(prog, ProgressPhase.READ_CSV)
