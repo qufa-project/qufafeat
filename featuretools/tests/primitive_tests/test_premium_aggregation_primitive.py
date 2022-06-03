@@ -290,3 +290,19 @@ def test_MedianCount():
 def test_MinCount():
     min_count = MinCount()
     assert min_count([1, 2, 5, 1, 5, 3, 5]) == 2
+
+#okay
+def test_IsUnique1():
+    is_unique = IsUnique()
+    tolerance_percent = 100
+    IsUnique([3, 1, 2, 3, 4, None], tolerance_percent)
+    assert IsUnique([3, 1, 2, 3, 4, None], tolerance_percent) == [True, False, True, True, True, False]
+
+ #okay
+def test_IsUnique2():
+    is_unique_col = IsUnique(skipna=False)
+    tolerance_percent = 100
+    IsUnique([3, 1, 2, 3, 4, None], tolerance_percent)
+    assert IsUnique([3, 1, 2, 3, 4, None], tolerance_percent) == [True, False, True, True, True]
+
+print("END")
