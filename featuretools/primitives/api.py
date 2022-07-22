@@ -2,6 +2,7 @@
 from .base import make_agg_primitive, make_trans_primitive
 from .standard import *
 from .premium import *
+from .correction import *
 
 from .utils import (
     get_aggregation_primitives,
