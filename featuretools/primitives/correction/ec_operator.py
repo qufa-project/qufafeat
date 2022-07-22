@@ -80,3 +80,43 @@ class ECIsUnique(AggregationPrimitive):
             return list(result)
 
         return ec_is_unique
+
+
+class ECIsNorm(AggregationPrimitive):
+    """ Determines whether a given value can be included
+        in a normal distributed column.
+
+        Description:
+            Given a value, determine whether a given value can be included in a column
+            that already forms a normal distribution.
+
+        Examples:
+            >>> is_norm = ECIsNorm()
+            >>> norm_col = randn(10)
+            >>> is_norm(norm_col)
+                [True, True, True, True, True, True, True, True, True, True]
+
+    """
+    name = "ec_is_norm"
+    input_types = [[Numeric], Numeric]
+    return_type = [Boolean]
+    description_template = "detect the values not allowed in norm columns"
+
+    def get_function(self):
+        def ec_is_norm(input_data, remove_range=3):
+            df_dataset = pd.DataFrame(input_data, columns=['data'])
+            df_dataset['result'] = [True for i in range(df_dataset.shape[0])]
+            '''
+            [ IQR method ] 
+            It's the general method to detect outlier data
+            '''
+            level_q1 = df_dataset['data'].quantile(0.25)
+            level_q3 = df_dataset['data'].quantile(0.75)
+            iqr = level_q3 - level_q1
+
+            df_dataset.loc[(df_dataset['data'] > level_q3 + (remove_range * iqr)) | (
+                        df_dataset['data'] < level_q1 - (remove_range * iqr)), 'result'] = False
+
+            return list(df_dataset['result'])
+
+        return ec_is_norm
