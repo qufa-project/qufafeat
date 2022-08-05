@@ -5,6 +5,7 @@ import scipy
 from scipy.signal import find_peaks
 from haversine import haversine
 from collections import Counter
+from scipy.stats import shapiro
 import math
 import statistics
 
@@ -80,3 +81,56 @@ class ECIsUnique(AggregationPrimitive):
             return list(result)
 
         return ec_is_unique
+
+
+class ECIsNorm(AggregationPrimitive):
+    """ Determines whether a given value can be included
+        in a normal distributed column.
+
+        Description:
+            Given a value, determine whether a given value can be included in a column
+            that already forms a normal distribution.
+
+        Examples:
+            >>> is_norm = ECIsNorm()
+            >>> norm_col = randn(10)
+            >>> is_norm(norm_col)
+                [True, True, True, True, True, True, True, True, True, True]
+
+    """
+    name = "ec_is_norm"
+    input_types = [[Numeric], Numeric]
+    return_type = [Boolean]
+    description_template = "detect the values not allowed in norm columns"
+
+    def get_function(self):
+        def ec_is_norm(input_data):
+
+            """
+            [ Shapiro-Wilk Test ]
+            It's the most powerful test to check the normality of a variable.
+            IF the p-value <= 0.05 THEN we assume the distribution of our variable is not normal/gaussian.
+            IF the p-value > 0.05 THEN we assume the distribution of our variable is normal/gaussian.
+            """
+            # do Shapiro-Wilk Test
+            statistic, p_value = shapiro(input_data)
+
+            if p_value > 0.05:
+                df_data = pd.DataFrame(input_data, columns=['data'])
+                df_data['result'] = [True for i in range(df_data.shape[0])]
+                '''
+                [ IQR method ] 
+                It's the general method to detect outlier data
+                '''
+                level_q1 = df_data['data'].quantile(0.25)
+                level_q3 = df_data['data'].quantile(0.75)
+                iqr = level_q3 - level_q1
+
+                df_data.loc[(df_data['data'] > level_q3 + (1.5 * iqr)) | (
+                        df_data['data'] < level_q1 - (1.5 * iqr)), 'result'] = False
+                return list(df_data['result'])
+
+            else:  # fail
+                return [False for i in range(len(input_data))]
+
+        return ec_is_norm
