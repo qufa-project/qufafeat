@@ -134,3 +134,47 @@ class ECIsNorm(AggregationPrimitive):
                 return [False for i in range(len(input_data))]
 
         return ec_is_norm
+
+
+class ECHasInclude(AggregationPrimitive):
+    """ Determines whether there is a containment relationship
+        between two columns.
+
+        Description:
+            Given a column, determine whether a given column can be included in criteria column.
+
+        Examples:
+            >>> candidate_col = [1, 2, 2, 4, 6, 8, 10]
+            >>> criteria_col = [1, 2, 4, 4, 6, 8, 8, 8, 10, 12]
+            >>> has_include = ECHasInclude()
+            >>> has_include(candidate_col, criteria_col)
+                [True, True, True, True, True, True, True]
+
+            >>> candidate_col = [1, 2, 2, 4, 6, 6, 8, 10]
+            >>> criteria_col = [1, 2, 3, 4, 5, 7, 8, 10]
+            >>> has_include = ECHasInclude()
+            >>> has_include(candidate_col, criteria_col)
+                [True, True, True, True, False, False, True, True]
+    """
+    name = "ec_has_include"
+    input_types = [[Numeric], [Numeric]]
+    return_type = [Boolean]
+    description_template = "determine containment relationships between two columns"
+
+    def get_function(self):
+        def ec_has_include(candidate_col, criteria_col):
+            candidate_set = set(candidate_col)
+            criteria_set = set(criteria_col)
+
+            if candidate_set.intersection(criteria_set) == candidate_set:
+                return [True for i in range(len(candidate_col))]
+            else:
+                temp_df = pd.DataFrame(candidate_col, columns=['data'])
+                temp_df['result'] = True
+
+                diff_set = candidate_set.difference(criteria_set)
+                temp_df.loc[temp_df['data'].isin(list(diff_set)), 'result'] = False
+
+                return temp_df['result'].to_list()
+
+        return ec_has_include
